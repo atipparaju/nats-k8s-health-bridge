@@ -95,17 +95,47 @@ func (c *Client) IsConnected() bool {
 	return c.nc.IsConnected()
 }
 
-// GetConsumerInfo fetches live consumer info from JetStream.
+const (
+	maxRetries = 2
+	retryDelay = 1 * time.Second
+)
+
+// GetConsumerInfo fetches live consumer info from JetStream with retry on transient errors.
 func (c *Client) GetConsumerInfo(ctx context.Context, stream, consumer string) (*ConsumerInfo, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Debug("retrying consumer info fetch",
+				"stream", stream,
+				"consumer", consumer,
+				"attempt", attempt+1,
+			)
+			select {
+			case <-ctx.Done():
+				return nil, fmt.Errorf("context cancelled during retry for %s/%s: %w", stream, consumer, ctx.Err())
+			case <-time.After(retryDelay):
+			}
+		}
+
+		info, err := c.fetchConsumerInfo(ctx, stream, consumer)
+		if err == nil {
+			return info, nil
+		}
+		lastErr = err
+	}
+	return nil, lastErr
+}
+
+func (c *Client) fetchConsumerInfo(ctx context.Context, stream, consumer string) (*ConsumerInfo, error) {
+	reqCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	cons, err := c.js.Consumer(ctx, stream, consumer)
+	cons, err := c.js.Consumer(reqCtx, stream, consumer)
 	if err != nil {
 		return nil, fmt.Errorf("fetching consumer %s/%s: %w", stream, consumer, err)
 	}
 
-	info, err := cons.Info(ctx)
+	info, err := cons.Info(reqCtx)
 	if err != nil {
 		return nil, fmt.Errorf("fetching consumer info for %s/%s: %w", stream, consumer, err)
 	}
