@@ -1,0 +1,13 @@
+apiVersion: v2
+name: nats-k8s-health-bridge
+description: Kubernetes sidecar for NATS JetStream consumer health probes
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - nats
+  - jetstream
+  - kubernetes
+  - health
+  - observability
+home: https://github.com/atipparaju/nats-k8s-health-bridge

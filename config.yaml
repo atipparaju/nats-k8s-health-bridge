@@ -1,0 +1,60 @@
+# nats-k8s-health-bridge configuration
+# All values can be overridden with environment variables prefixed NKHB_
+# Example: NKHB_NATS_URL=nats://myserver:4222
+#          NKHB_SERVER_PORT=9090
+#          NKHB_LOG_LEVEL=debug
+
+# Logging level: debug | info | warn | error
+log_level: info
+
+# How often to poll JetStream consumer info
+poll_interval: 10s
+
+server:
+  # Port for /healthz, /readyz, /metrics, /status
+  port: 8080
+  # Graceful shutdown timeout
+  shutdown_timeout: 10s
+
+nats:
+  # NATS server URL (supports nats://, tls://, ws://)
+  url: nats://localhost:4222
+
+  # Optional: path to NATS credentials file (.creds) for NGS/accounts auth
+  # credentials_file: /etc/nats/user.creds
+
+  # Optional: path to NKey seed file for NKey auth
+  # nkey_file: /etc/nats/user.nkey
+
+  # Optional: mTLS client certificate and key
+  # tls_cert: /etc/nats/tls.crt
+  # tls_key:  /etc/nats/tls.key
+  # tls_ca:   /etc/nats/ca.crt
+
+  # Initial connection timeout
+  connect_timeout: 5s
+  # Wait between reconnect attempts
+  reconnect_wait: 2s
+  # Max reconnect attempts (-1 = infinite)
+  max_reconnects: -1
+
+# List of JetStream consumers to monitor.
+# Each entry defines one consumer and its health thresholds.
+consumers:
+  - name: order-processor          # Human-readable label (used in metrics labels)
+    stream: ORDERS                  # JetStream stream name
+    consumer: order-processor       # JetStream consumer name (durable)
+    thresholds:
+      max_lag: 1000                 # Alert if num_pending exceeds this (0 = disabled)
+      max_ack_pending: 500          # Alert if num_ack_pending exceeds this (0 = disabled)
+      max_redelivery_rate: 0.1      # Alert if redelivery rate exceeds 10% (0 = disabled)
+      eval_window: 60s              # Window for rate calculations
+
+  - name: notification-sender
+    stream: NOTIFICATIONS
+    consumer: email-sender
+    thresholds:
+      max_lag: 500
+      max_ack_pending: 100
+      max_redelivery_rate: 0.05
+      eval_window: 30s

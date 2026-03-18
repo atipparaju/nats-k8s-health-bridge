@@ -1,0 +1,42 @@
+image:
+  repository: ghcr.io/atipparaju/nats-k8s-health-bridge
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Port the sidecar listens on
+port: 8080
+
+# NATS connection
+nats:
+  url: nats://nats:4222
+  credentialsSecret: ""   # K8s secret name containing user.creds
+  tlsSecret: ""           # K8s secret name containing tls.crt, tls.key, ca.crt
+
+# Consumers to monitor (mirrors config.yaml consumers[])
+consumers: []
+# - name: order-processor
+#   stream: ORDERS
+#   consumer: order-processor
+#   thresholds:
+#     maxLag: 1000
+#     maxAckPending: 500
+
+# Resources for the sidecar container
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi
+
+# Liveness and readiness probe config
+probes:
+  liveness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
