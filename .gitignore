@@ -9,3 +9,4 @@ vendor/
 /.idea/modules.xml
 /.idea/nats-k8s-health-bridge.iml
 /.idea/vcs.xml
+/.claude/settings.local.json
