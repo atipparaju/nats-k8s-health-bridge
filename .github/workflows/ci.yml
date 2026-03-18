@@ -48,12 +48,6 @@ jobs:
   integration-test:
     name: Integration Test
     runs-on: ubuntu-latest
-    services:
-      nats:
-        image: nats:latest
-        ports:
-          - 4222:4222
-        options: --name nats-test -e NATS_OPTS="-js"
     steps:
       - uses: actions/checkout@v5
 
@@ -63,10 +57,20 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Start NATS with JetStream
+        run: |
+          docker run -d --name nats-test -p 4222:4222 nats:latest -js
+          sleep 2
+          docker logs nats-test
+
       - name: Run integration tests
         env:
           NATS_URL: nats://localhost:4222
         run: go test -race -count=1 -timeout=120s -tags=integration ./...
+
+      - name: Stop NATS
+        if: always()
+        run: docker stop nats-test && docker rm nats-test
 
   build-push:
     name: Build & Push Docker Image

@@ -10,6 +10,7 @@ package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 )
 
 // Registry holds all Prometheus metric definitions for the sidecar.
@@ -70,8 +71,8 @@ func NewRegistry() *Registry {
 		r.ConsumerAckPending,
 		r.ConsumerRedelivered,
 		r.NATSConnected,
-		prometheus.NewGoCollector(),
-		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
+		collectors.NewGoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 	)
 
 	return r
