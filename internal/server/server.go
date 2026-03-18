@@ -23,6 +23,14 @@ import (
 	"github.com/atipparaju/nats-k8s-health-bridge/internal/metrics"
 )
 
+// HealthChecker defines the interface for querying health state.
+// This enables unit testing of HTTP handlers without a real health checker.
+type HealthChecker interface {
+	IsLive() bool
+	IsReady() (bool, []string)
+	States() []*health.ConsumerState
+}
+
 // Server is the HTTP server exposing probe and metrics endpoints.
 type Server struct {
 	srv    *http.Server
@@ -31,7 +39,7 @@ type Server struct {
 }
 
 // New creates a configured HTTP server with all routes registered.
-func New(cfg *config.Config, checker *health.Checker, reg *metrics.Registry, logger *slog.Logger) *Server {
+func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logger *slog.Logger) *Server {
 	mux := http.NewServeMux()
 
 	// /healthz — liveness: is NATS connected?
