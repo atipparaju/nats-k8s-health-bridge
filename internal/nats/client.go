@@ -31,7 +31,7 @@ type Client struct {
 type ConsumerInfo struct {
 	NumPending     uint64
 	NumAckPending  int
-	NumRedelivered uint64
+	NumRedelivered int
 	IsActive       bool
 }
 
@@ -100,7 +100,12 @@ func (c *Client) GetConsumerInfo(ctx context.Context, stream, consumer string) (
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	info, err := c.js.ConsumerInfo(ctx, stream, consumer)
+	cons, err := c.js.Consumer(ctx, stream, consumer)
+	if err != nil {
+		return nil, fmt.Errorf("fetching consumer %s/%s: %w", stream, consumer, err)
+	}
+
+	info, err := cons.Info(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("fetching consumer info for %s/%s: %w", stream, consumer, err)
 	}

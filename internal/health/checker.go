@@ -37,7 +37,7 @@ type ConsumerState struct {
 	Status         Status    `json:"status"`
 	NumPending     uint64    `json:"num_pending"`
 	NumAckPending  int       `json:"num_ack_pending"`
-	NumRedelivered uint64    `json:"num_redelivered"`
+	NumRedelivered int       `json:"num_redelivered"`
 	LastChecked    time.Time `json:"last_checked"`
 	LastError      string    `json:"last_error,omitempty"`
 	Reasons        []string  `json:"reasons,omitempty"`
