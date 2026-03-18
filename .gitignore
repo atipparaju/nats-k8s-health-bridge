@@ -5,3 +5,7 @@ bin/
 vendor/
 .env
 *.local.yaml
+/.idea/.gitignore
+/.idea/modules.xml
+/.idea/nats-k8s-health-bridge.iml
+/.idea/vcs.xml
