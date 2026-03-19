@@ -10,3 +10,7 @@ vendor/
 /.idea/nats-k8s-health-bridge.iml
 /.idea/vcs.xml
 /.claude/settings.local.json
+projectdocuments/
+projectmemory/
+projectspecifications/
+projectqa/
