@@ -53,9 +53,16 @@ func run(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Set up structured logger
-	level := slog.LevelInfo
-	if cfg.LogLevel == "debug" {
+	var level slog.Level
+	switch cfg.LogLevel {
+	case "debug":
 		level = slog.LevelDebug
+	case "warn":
+		level = slog.LevelWarn
+	case "error":
+		level = slog.LevelError
+	default:
+		level = slog.LevelInfo
 	}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
 	slog.SetDefault(logger)
@@ -82,7 +89,11 @@ func run(cmd *cobra.Command, _ []string) error {
 	defer cancel()
 
 	// Start health polling loop
-	go checker.Run(ctx)
+	checkerDone := make(chan struct{})
+	go func() {
+		checker.Run(ctx)
+		close(checkerDone)
+	}()
 
 	// Start HTTP server
 	errCh := make(chan error, 1)
@@ -103,7 +114,14 @@ func run(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	// Graceful shutdown sequence:
+	// 1. Cancel context — stops health polling loop
+	// 2. Wait for checker to finish
+	// 3. Shutdown HTTP server — drains in-flight requests
+	// 4. Close NATS connection (via defer)
 	slog.Info("shutting down gracefully")
 	cancel()
+	<-checkerDone
+	slog.Info("health checker stopped")
 	return srv.Shutdown(context.Background())
 }

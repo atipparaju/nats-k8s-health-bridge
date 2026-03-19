@@ -155,8 +155,8 @@ Estimated: Steps 1-4 are the critical path. Steps 5-9 are polish.
 - [x] Step 2: Extract HealthChecker interface in server package
 - [x] Step 3: Unit tests for config, health, server, metrics
 - [x] Step 4: Implement MaxRedeliveryRate sliding window
-- [ ] Step 5: Add retry to GetConsumerInfo
-- [ ] Step 6: Improve graceful shutdown
-- [ ] Step 7: Integration test with build tag
-- [ ] Step 8: CI pipeline (coverage, lint, badges)
-- [ ] Step 9: Documentation review (README, CONTRIBUTING.md)
+- [x] Step 5: Add retry to GetConsumerInfo
+- [x] Step 6: Improve graceful shutdown
+- [x] Step 7: Integration test with build tag
+- [x] Step 8: CI pipeline (coverage, lint, integration tests)
+- [x] Step 9: CONTRIBUTING.md added
