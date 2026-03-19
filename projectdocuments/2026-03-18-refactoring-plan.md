@@ -1,4 +1,4 @@
-# Refactoring Plan: Selective Pattern Adoption from msvc_irouter
+# Refactoring Plan: Selective Pattern Adoption
 
 **Date:** 2026-03-18
 **Goal:** Improve testability and robustness while keeping CNCF-ready simplicity
