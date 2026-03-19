@@ -24,8 +24,9 @@ FROM gcr.io/distroless/static-debian12:nonroot
 # Copy CA certs for TLS
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-# Copy the binary
+# Copy the binary and default config
 COPY --from=builder /nats-k8s-health-bridge /nats-k8s-health-bridge
+COPY --from=builder /build/config.yaml /etc/nats-k8s-health-bridge/config.yaml
 
 # Run as non-root (nonroot user is uid 65532 in distroless)
 USER nonroot:nonroot

@@ -9,7 +9,9 @@
 package config
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -87,10 +89,16 @@ func Load(cfgFile string) (*Config, error) {
 	}
 
 	if err := v.ReadInConfig(); err != nil {
-		// Config file is optional if env vars are set
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+		// Config file is optional when not explicitly specified.
+		// When explicitly specified via --config, missing file is a hard error.
+		var notFoundErr viper.ConfigFileNotFoundError
+		var pathErr *os.PathError
+		if cfgFile != "" {
+			return nil, fmt.Errorf("reading config file %s: %w", cfgFile, err)
+		} else if !errors.As(err, &notFoundErr) && !errors.As(err, &pathErr) {
 			return nil, fmt.Errorf("reading config file: %w", err)
 		}
+		// No config file found — will rely on defaults and env vars
 	}
 
 	// Environment variable overrides: NKHB_NATS_URL, NKHB_SERVER_PORT, etc.
