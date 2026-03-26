@@ -349,13 +349,17 @@ curl http://localhost:8080/status | jq .
 - [x] Helm chart (ConfigMap + values)
 - [x] README with K8s sidecar injection example
 
-### 🔲 TODO (Phase 1 — complete before Phase 2)
-- [ ] `go.sum` — run `go mod tidy` to generate
-- [ ] `LICENSE` — add Apache 2.0 text
-- [ ] Unit tests for all internal packages
-- [ ] Replace `github.com/atipparaju` → `github.com/atipparaju` in all files
-- [ ] Integration test with real NATS (build tag: `integration`)
-- [ ] `MaxRedeliveryRate` threshold evaluation (currently wired but not calculated — needs a sliding window over the redelivered counter delta between poll intervals)
+### ✅ Complete (Phase 1 — continued)
+- [x] `go.sum` — generated via `go mod tidy`
+- [x] `LICENSE` — Apache 2.0 text added
+- [x] Unit tests for config, health, server, and metrics packages
+- [x] Module path set to `github.com/atipparaju/nats-k8s-health-bridge`
+- [x] Integration test with real NATS (build tag: `integration`)
+- [x] `MaxRedeliveryRate` threshold evaluation with sliding window
+- [x] Retry logic for NATS operations
+- [x] CONTRIBUTING.md
+- [x] Docker config: embedded default config.yaml, env-var-only mode
+- [x] Interface extraction for testability
 
 ### 🔲 Phase 2 (Operator — do NOT start until Phase 1 tests pass)
 - [ ] `NATSConsumerHealth` CRD definition
@@ -366,50 +370,6 @@ curl http://localhost:8080/status | jq .
 
 ---
 
-## Important: Module Path Replacement
+## Module Path
 
-**All source files currently use `github.com/atipparaju/nats-k8s-health-bridge`.**
-
-Before running `go mod tidy` or building, replace all occurrences with
-`github.com/atipparaju/nats-k8s-health-bridge`:
-
-```bash
-find . -type f -name "*.go" -exec sed -i 's|github.com/atipparaju/nats-k8s-health-bridge|github.com/atipparaju/nats-k8s-health-bridge|g' {} \;
-sed -i 's|github.com/atipparaju/nats-k8s-health-bridge|github.com/atipparaju/nats-k8s-health-bridge|g' go.mod
-sed -i 's|atipparaju|atipparaju|g' Makefile README.md helm/nats-k8s-health-bridge/Chart.yaml
-```
-
----
-
-## Suggested First Claude Code Session Prompt
-
-```
-Read CLAUDE.md fully.
-
-Then complete these tasks in order:
-
-1. Run the module path replacement commands from the "Important: Module Path
-   Replacement" section of CLAUDE.md.
-
-2. Run `go mod tidy` to generate go.sum and pull all dependencies.
-
-3. Run `go build ./cmd/sidecar` — fix any compilation errors.
-
-4. Add an Apache 2.0 LICENSE file.
-
-5. Write unit tests for:
-   - internal/config: TestLoad (valid config, missing required fields, env var override)
-   - internal/health: TestEvaluate (under threshold = healthy, over threshold = degraded)
-   - internal/server: TestHealthzHandler, TestReadyzHandler (use httptest)
-
-6. Implement the MaxRedeliveryRate threshold: track the delta of NumRedelivered
-   between consecutive polls over the EvalWindow, compute rate as
-   delta/total_delivered, compare to MaxRedeliveryRate threshold.
-
-7. Run `make test` and ensure all tests pass.
-
-8. Run `make build` and confirm the binary compiles cleanly.
-
-Use Go 1.23 idioms. Follow all coding standards in CLAUDE.md.
-Do not use any package-level globals. All I/O functions must accept context.Context.
-```
+All source files use `github.com/atipparaju/nats-k8s-health-bridge`.
