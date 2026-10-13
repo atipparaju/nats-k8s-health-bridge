@@ -46,6 +46,7 @@ type ConsumerState struct {
 	NumAckPending  int       `json:"num_ack_pending"`
 	NumRedelivered int       `json:"num_redelivered"`
 	LastChecked    time.Time `json:"last_checked"`
+	LastSuccessful time.Time `json:"last_successful,omitempty"`
 	LastError      string    `json:"last_error,omitempty"`
 	Reasons        []string  `json:"reasons,omitempty"`
 }
@@ -126,6 +127,7 @@ func (c *Checker) pollOne(ctx context.Context, consumerCfg config.ConsumerConfig
 	}
 
 	// Update raw metric values
+	state.LastSuccessful = state.LastChecked
 	state.NumPending = info.NumPending
 	state.NumAckPending = info.NumAckPending
 	state.NumRedelivered = info.NumRedelivered
@@ -192,11 +194,21 @@ func (c *Checker) IsReady() (bool, []string) {
 
 	var failures []string
 	for name, state := range c.states {
-		if state.Status == StatusUnknown || (c.cfg.Server.ReadinessFailOnDegraded && state.Status == StatusDegraded) {
-			failures = append(failures, fmt.Sprintf("%s: %s", name, state.Status))
+		if state.Status == StatusUnknown || c.stale(state, time.Now()) || (c.cfg.Server.ReadinessFailOnDegraded && state.Status == StatusDegraded) {
+			if c.stale(state, time.Now()) {
+				failures = append(failures, fmt.Sprintf("%s: stale consumer observation", name))
+			} else {
+				failures = append(failures, fmt.Sprintf("%s: %s", name, state.Status))
+			}
 		}
 	}
 	return len(failures) == 0, failures
+}
+
+// stale reports whether the most recent successful consumer poll is too old.
+// A zero max age disables age enforcement for manually constructed configurations.
+func (c *Checker) stale(state *ConsumerState, now time.Time) bool {
+	return c.cfg.MaxObservationAge > 0 && (state.LastSuccessful.IsZero() || now.Sub(state.LastSuccessful) > c.cfg.MaxObservationAge)
 }
 
 // States returns a snapshot of all consumer states (for /status endpoint).
@@ -207,6 +219,11 @@ func (c *Checker) States() []*ConsumerState {
 	out := make([]*ConsumerState, 0, len(c.states))
 	for _, s := range c.states {
 		copy := *s
+		copy.Reasons = append([]string(nil), s.Reasons...)
+		if c.stale(s, time.Now()) {
+			copy.Status = StatusUnknown
+			copy.Reasons = append(copy.Reasons, "consumer observation is stale")
+		}
 		out = append(out, &copy)
 	}
 	return out

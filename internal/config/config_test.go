@@ -210,3 +210,12 @@ func TestLoad_InvalidConfigFile(t *testing.T) {
 		t.Fatal("expected error for nonexistent config file")
 	}
 }
+
+func TestLoad_ObservationAgeDefaultsAndValidation(t *testing.T) {
+	path := writeTestConfig(t, "nats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
+	cfg, err := Load(path)
+	if err != nil { t.Fatal(err) }
+	if cfg.MaxObservationAge != 30*time.Second { t.Fatalf("default max_observation_age=%v", cfg.MaxObservationAge) }
+	path = writeTestConfig(t, "poll_interval: 10s\nmax_observation_age: 5s\nnats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
+	if _, err := Load(path); err == nil { t.Fatal("expected invalid max_observation_age error") }
+}

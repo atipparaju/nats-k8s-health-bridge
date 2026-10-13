@@ -9,6 +9,9 @@ log_level: info
 
 # How often to poll JetStream consumer info
 poll_interval: 10s
+# Maximum age of the last successful consumer-info poll before readiness fails.
+# Must exceed poll_interval. Use a margin for retries and transient latency.
+max_observation_age: 30s
 
 server:
   # Port for /healthz, /readyz, /metrics, /status
