@@ -224,3 +224,8 @@ func TestLoad_NegativeHeartbeatTimeout(t *testing.T) {
 	path := writeTestConfig(t, "nats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n    heartbeat_timeout: -1s\n")
 	if _, err := Load(path); err == nil { t.Fatal("expected negative heartbeat timeout error") }
 }
+
+func TestLoad_InvalidBindAddress(t *testing.T) {
+	path := writeTestConfig(t, "server:\n  bind_address: invalid-host\nnats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
+	if _, err := Load(path); err == nil { t.Fatal("expected invalid bind address") }
+}

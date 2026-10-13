@@ -272,3 +272,22 @@ func TestHeartbeatHandler_AcceptsLoopbackAndRejectsUnknown(t *testing.T) {
 		if rr.Code != tt.code { t.Fatalf("%s: status=%d want=%d", tt.name, rr.Code, tt.code) }
 	}
 }
+
+func TestProtectedDiagnosticEndpoints(t *testing.T) {
+	cfg := &config.Config{Server: config.ServerConfig{Port: 8080, BindAddress: "127.0.0.1", MetricsToken: "metrics-secret", StatusToken: "status-secret"}}
+	reg := metrics.NewRegistry()
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	srv := New(cfg, &mockHealthChecker{}, reg, logger)
+	for _, tt := range []struct{path, token string; want int} {
+		{"/metrics", "", 401}, {"/metrics", "wrong", 401}, {"/metrics", "metrics-secret", 200},
+		{"/status", "", 401}, {"/status", "metrics-secret", 401}, {"/status", "status-secret", 200},
+		{"/healthz", "", 503},
+	} {
+		req := httptest.NewRequest("GET", tt.path, nil)
+		if tt.token != "" { req.Header.Set("Authorization", "Bearer "+tt.token) }
+		rr := httptest.NewRecorder()
+		srv.srv.Handler.ServeHTTP(rr, req)
+		if rr.Code != tt.want { t.Errorf("%s token=%q status=%d want=%d", tt.path, tt.token, rr.Code, tt.want) }
+	}
+	if srv.srv.Addr != "127.0.0.1:8080" { t.Errorf("listen address=%s", srv.srv.Addr) }
+}
