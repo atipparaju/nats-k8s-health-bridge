@@ -98,6 +98,7 @@ Configuration is loaded from a YAML file with **environment variable overrides**
 |---|---|---|---|
 | `NKHB_LOG_LEVEL` | `log_level` | `info` | `debug`, `info`, `warn`, `error` |
 | `NKHB_POLL_INTERVAL` | `poll_interval` | `10s` | How often to poll JetStream |
+| `NKHB_MAX_OBSERVATION_AGE` | `max_observation_age` | `30s` | Maximum age of last successful consumer observation; must exceed poll interval |
 | `NKHB_SERVER_PORT` | `server.port` | `8080` | HTTP server port |
 | `NKHB_SERVER_READINESS_FAIL_ON_DEGRADED` | `server.readiness_fail_on_degraded` | `false` | Opt into threshold-based readiness failures |
 | `NKHB_SERVER_SHUTDOWN_TIMEOUT` | `server.shutdown_timeout` | `10s` | Graceful shutdown wait |
@@ -114,9 +115,13 @@ Configuration is loaded from a YAML file with **environment variable overrides**
 
 See [`config.yaml`](config.yaml) for a fully annotated example.
 
+### Observation freshness
+
+The bridge tracks both `last_checked` (most recent poll attempt) and `last_successful` (most recent successful JetStream consumer-info response). If a consumer has not been observed successfully within `max_observation_age` (default `30s`, with a `10s` poll interval), `/readyz` returns `503` even if the last recorded state was healthy. `/status` exposes an effective `unknown` state and a stale reason, without modifying the stored last observation. Set the timeout above the poll interval with sufficient margin for retries and network latency. A zero value disables freshness enforcement only for programmatically constructed configurations; file-based configurations default to `30s`.
+
 ### Readiness versus degradation
 
-By default, `/readyz` requires a NATS connection and successfully retrieved consumer state. A consumer that exceeds `max_lag` or `max_ack_pending` (removed) is reported as **degraded** in `/status` and metrics, but the pod stays ready. This prevents a healthy worker with a large backlog from being removed from service solely because of load.
+By default, `/readyz` requires a NATS connection and successfully retrieved consumer state. A consumer that exceeds `max_lag` or `max_ack_pending` is reported as **degraded** in `/status` and metrics, but the pod stays ready. This prevents a healthy worker with a large backlog from being removed from service solely because of load.
 
 Set `server.readiness_fail_on_degraded: true` only if your deployment explicitly requires threshold breaches to fail Kubernetes readiness. This is an opt-in compatibility mode; it may reduce capacity during incidents. NATS disconnections and unknown consumer states continue to fail readiness. Readiness is not a substitute for an application-level processing heartbeat.
 
