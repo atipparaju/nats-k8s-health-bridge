@@ -10,6 +10,7 @@ package server
 
 import (
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -94,13 +95,13 @@ func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logge
 	})
 
 	// /metrics — Prometheus exposition
-	mux.Handle("/metrics", promhttp.HandlerFor(
+	mux.Handle("/metrics", protected(cfg.Server.MetricsToken, promhttp.HandlerFor(
 		reg.PrometheusRegistry,
 		promhttp.HandlerOpts{EnableOpenMetrics: true},
-	))
+	)))
 
 	// /status — full JSON state for debugging
-	mux.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/status", protected(cfg.Server.StatusToken, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		states := checker.States()
 		ready, failures := checker.IsReady()
 		writeJSON(w, http.StatusOK, map[string]any{
@@ -125,7 +126,7 @@ func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logge
 	})
 
 	httpSrv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", cfg.Server.Port),
+		Addr:         net.JoinHostPort(cfg.Server.BindAddress, fmt.Sprintf("%d", cfg.Server.Port)),
 		Handler:      loggingMiddleware(logger, mux),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -158,6 +159,21 @@ func isLoopback(remote string) bool {
 	if err != nil { return false }
 	ip := net.ParseIP(strings.Trim(host, "[]"))
 	return ip != nil && ip.IsLoopback()
+}
+
+// protected applies optional bearer-token authentication to diagnostic endpoints.
+// Empty tokens preserve existing behavior; operators should restrict network access.
+func protected(token string, next http.Handler) http.Handler {
+	if token == "" { return next }
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		provided := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+		if len(provided) != len(token) || subtle.ConstantTimeCompare([]byte(provided), []byte(token)) != 1 {
+			w.Header().Set("WWW-Authenticate", "Bearer")
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // writeJSON writes a JSON response with the given status code.
