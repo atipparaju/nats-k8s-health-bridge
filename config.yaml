@@ -13,6 +13,9 @@ poll_interval: 10s
 server:
   # Port for /healthz, /readyz, /metrics, /status
   port: 8080
+  # Default: consumer threshold breaches are observable but do not remove pods from service.
+  # Set true only after validating the operational impact for your workload.
+  readiness_fail_on_degraded: false
   # Graceful shutdown timeout
   shutdown_timeout: 10s
 

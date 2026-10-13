@@ -247,14 +247,17 @@ func (c *Checker) IsLive() bool {
 	return true
 }
 
-// IsReady returns true if all consumers are healthy (readiness).
+// IsReady reports whether monitored consumer metadata is available.
+// Degraded thresholds are observational by default: backlog alone must not evict a
+// functioning consumer from Kubernetes service. Operators may explicitly opt in
+// to strict threshold-based readiness via server.readiness_fail_on_degraded.
 func (c *Checker) IsReady() (bool, []string) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
 	var failures []string
 	for name, state := range c.states {
-		if state.Status != StatusHealthy {
+		if state.Status == StatusUnknown || (c.cfg.Server.ReadinessFailOnDegraded && state.Status == StatusDegraded) {
 			failures = append(failures, fmt.Sprintf("%s: %s", name, state.Status))
 		}
 	}

@@ -138,11 +138,8 @@ func TestChecker_DegradedLag(t *testing.T) {
 	checker.pollAll(ctx)
 
 	ready, failures := checker.IsReady()
-	if ready {
-		t.Error("IsReady() = true, want false (lag exceeded)")
-	}
-	if len(failures) == 0 {
-		t.Error("expected failure reasons, got none")
+	if !ready || len(failures) != 0 {
+		t.Errorf("degraded lag should not fail default readiness: ready=%v failures=%v", ready, failures)
 	}
 
 	states := checker.States()
@@ -165,8 +162,8 @@ func TestChecker_DegradedAckPending(t *testing.T) {
 	checker.pollAll(ctx)
 
 	ready, _ := checker.IsReady()
-	if ready {
-		t.Error("IsReady() = true, want false (ack_pending exceeded)")
+	if !ready {
+		t.Error("degraded ack pending should not fail default readiness")
 	}
 
 	states := checker.States()
@@ -497,5 +494,29 @@ func TestChecker_RedeliveryRate_DisabledWhenZero(t *testing.T) {
 	states := checker.States()
 	if states[0].Status != StatusHealthy {
 		t.Errorf("status = %q, want %q (rate check disabled)", states[0].Status, StatusHealthy)
+	}
+}
+
+// Strict mode preserves threshold-based readiness for deployments that opt in.
+func TestChecker_StrictReadinessFailsOnDegradation(t *testing.T) {
+	mock := &mockNATSClient{connected: true, consumerInfo: &natsclient.ConsumerInfo{NumPending: 1500}}
+	checker := newTestChecker(mock, defaultConsumers())
+	checker.cfg.Server.ReadinessFailOnDegraded = true
+	checker.pollAll(context.Background())
+	ready, failures := checker.IsReady()
+	if ready || len(failures) != 1 {
+		t.Fatalf("strict readiness: ready=%v failures=%v, want false and one failure", ready, failures)
+	}
+}
+
+func TestChecker_DefaultReadinessPreservesDegradedStatus(t *testing.T) {
+	mock := &mockNATSClient{connected: true, consumerInfo: &natsclient.ConsumerInfo{NumPending: 1500}}
+	checker := newTestChecker(mock, defaultConsumers())
+	checker.pollAll(context.Background())
+	ready, failures := checker.IsReady()
+	if !ready || len(failures) != 0 { t.Fatalf("ready=%v failures=%v", ready, failures) }
+	states := checker.States()
+	if len(states) != 1 || states[0].Status != StatusDegraded || len(states[0].Reasons) == 0 {
+		t.Fatalf("degradation must remain observable: %+v", states)
 	}
 }

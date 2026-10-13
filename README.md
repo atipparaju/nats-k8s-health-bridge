@@ -14,7 +14,7 @@ NATS JetStream consumers running inside Kubernetes pods have no native way to si
 | Endpoint | Use | Returns |
 |---|---|---|
 | `GET /healthz` | Kubernetes **liveness** probe | `200` while the bridge HTTP process is responsive (independent of NATS connectivity) |
-| `GET /readyz` | Kubernetes **readiness** probe | `200` if NATS is connected and all consumers are within thresholds, `503` otherwise |
+| `GET /readyz` | Kubernetes **readiness** probe | `200` if NATS is connected and consumer status is available; threshold breaches only fail readiness when explicitly enabled |
 | `GET /metrics` | Prometheus scrape | Consumer lag, ack pending, redelivered, connection state |
 | `GET /status` | Debug JSON | Full state of all monitored consumers |
 
@@ -99,6 +99,7 @@ Configuration is loaded from a YAML file with **environment variable overrides**
 | `NKHB_LOG_LEVEL` | `log_level` | `info` | `debug`, `info`, `warn`, `error` |
 | `NKHB_POLL_INTERVAL` | `poll_interval` | `10s` | How often to poll JetStream |
 | `NKHB_SERVER_PORT` | `server.port` | `8080` | HTTP server port |
+| `NKHB_SERVER_READINESS_FAIL_ON_DEGRADED` | `server.readiness_fail_on_degraded` | `false` | Opt into threshold-based readiness failures |
 | `NKHB_SERVER_SHUTDOWN_TIMEOUT` | `server.shutdown_timeout` | `10s` | Graceful shutdown wait |
 | `NKHB_NATS_URL` | `nats.url` | `nats://localhost:4222` | NATS server URL |
 | `NKHB_NATS_CREDENTIALS_FILE` | `nats.credentials_file` | — | Path to `.creds` file |
@@ -112,6 +113,12 @@ Configuration is loaded from a YAML file with **environment variable overrides**
 ### Full config.yaml example
 
 See [`config.yaml`](config.yaml) for a fully annotated example.
+
+### Readiness versus degradation
+
+By default, `/readyz` requires a NATS connection and successfully retrieved consumer state. A consumer that exceeds `max_lag`, `max_ack_pending`, or `max_redelivery_rate` is reported as **degraded** in `/status` and metrics, but the pod stays ready. This prevents a healthy worker with a large backlog from being removed from service solely because of load.
+
+Set `server.readiness_fail_on_degraded: true` only if your deployment explicitly requires threshold breaches to fail Kubernetes readiness. This is an opt-in compatibility mode; it may reduce capacity during incidents. NATS disconnections and unknown consumer states continue to fail readiness. Readiness is not a substitute for an application-level processing heartbeat.
 
 ## Prometheus Metrics
 
