@@ -16,6 +16,11 @@ max_observation_age: 30s
 server:
   # Port for /healthz, /readyz, /metrics, /status
   port: 8080
+  # Bind to 127.0.0.1 for pod-local access; Kubernetes HTTP probes need pod-reachable address.
+  bind_address: 0.0.0.0
+  # Optional bearer tokens for diagnostics; inject through secrets/env, never commit real values.
+  # metrics_token: ""
+  # status_token: ""
   # Default: consumer threshold breaches are observable but do not remove pods from service.
   # Set true only after validating the operational impact for your workload.
   readiness_fail_on_degraded: false
