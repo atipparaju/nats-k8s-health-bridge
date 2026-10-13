@@ -142,7 +142,7 @@ func (c *Checker) pollOne(ctx context.Context, consumerCfg config.ConsumerConfig
 
 	c.reg.ConsumerLag.WithLabelValues(consumerCfg.Name, consumerCfg.Stream, consumerCfg.Consumer).Set(float64(info.NumPending))
 	c.reg.ConsumerAckPending.WithLabelValues(consumerCfg.Name, consumerCfg.Stream, consumerCfg.Consumer).Set(float64(info.NumAckPending))
-	c.reg.ConsumerRedelivered.WithLabelValues(consumerCfg.Name, consumerCfg.Stream, consumerCfg.Consumer).Add(float64(info.NumRedelivered))
+	c.reg.ConsumerRedelivered.WithLabelValues(consumerCfg.Name, consumerCfg.Stream, consumerCfg.Consumer).Set(float64(info.NumRedelivered))
 
 	// Record redelivery sample for rate calculation
 	c.recordRedeliverySample(consumerCfg.Name, info, consumerCfg.Thresholds.EvalWindow)
