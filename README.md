@@ -116,9 +116,15 @@ See [`config.yaml`](config.yaml) for a fully annotated example.
 
 ### Readiness versus degradation
 
-By default, `/readyz` requires a NATS connection and successfully retrieved consumer state. A consumer that exceeds `max_lag`, `max_ack_pending`, or `max_redelivery_rate` is reported as **degraded** in `/status` and metrics, but the pod stays ready. This prevents a healthy worker with a large backlog from being removed from service solely because of load.
+By default, `/readyz` requires a NATS connection and successfully retrieved consumer state. A consumer that exceeds `max_lag` or `max_ack_pending` (removed) is reported as **degraded** in `/status` and metrics, but the pod stays ready. This prevents a healthy worker with a large backlog from being removed from service solely because of load.
 
 Set `server.readiness_fail_on_degraded: true` only if your deployment explicitly requires threshold breaches to fail Kubernetes readiness. This is an opt-in compatibility mode; it may reduce capacity during incidents. NATS disconnections and unknown consumer states continue to fail readiness. Readiness is not a substitute for an application-level processing heartbeat.
+
+### Redelivery-rate measurement
+
+JetStream consumer-info `num_redelivered` is a point-in-time count, not a monotonic lifetime counter. The former `max_redelivery_rate` threshold was calculated from changes in `num_redelivered` and `num_ack_pending`; these snapshots cannot provide a reliable delivery denominator or event rate. **That threshold has been removed** rather than producing misleading health decisions. `eval_window` is also removed because it was only used by this calculation.
+
+For rate-based alerting, instrument message delivery attempts and acknowledgments in the consumer application or another reliable event source. Derive redelivery ratios from observed events over an explicit window. `/status` still includes the current `num_redelivered` snapshot; the metric fix is handled separately in the redelivery gauge PR. Remove `max_redelivery_rate` and `eval_window` from existing configurations before upgrading.
 
 ## Prometheus Metrics
 
