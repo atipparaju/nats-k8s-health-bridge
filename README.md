@@ -101,6 +101,9 @@ Configuration is loaded from a YAML file with **environment variable overrides**
 | `NKHB_POLL_INTERVAL` | `poll_interval` | `10s` | How often to poll JetStream |
 | `NKHB_MAX_OBSERVATION_AGE` | `max_observation_age` | `30s` | Maximum age of last successful consumer observation; must exceed poll interval |
 | `NKHB_SERVER_PORT` | `server.port` | `8080` | HTTP server port |
+| `NKHB_SERVER_BIND_ADDRESS` | `server.bind_address` | `0.0.0.0` | IP address on which the HTTP server listens |
+| `NKHB_SERVER_METRICS_TOKEN` | `server.metrics_token` | unset | Optional bearer token for `/metrics` |
+| `NKHB_SERVER_STATUS_TOKEN` | `server.status_token` | unset | Optional bearer token for `/status` |
 | `NKHB_SERVER_READINESS_FAIL_ON_DEGRADED` | `server.readiness_fail_on_degraded` | `false` | Opt into threshold-based readiness failures |
 | `NKHB_SERVER_SHUTDOWN_TIMEOUT` | `server.shutdown_timeout` | `10s` | Graceful shutdown wait |
 | `NKHB_NATS_URL` | `nats.url` | `nats://localhost:4222` | NATS server URL |
@@ -137,6 +140,12 @@ Set `server.readiness_fail_on_degraded: true` only if your deployment explicitly
 JetStream consumer-info `num_redelivered` is a point-in-time count, not a monotonic lifetime counter. The former `max_redelivery_rate` threshold was calculated from changes in `num_redelivered` and `num_ack_pending`; these snapshots cannot provide a reliable delivery denominator or event rate. **That threshold has been removed** rather than producing misleading health decisions. `eval_window` is also removed because it was only used by this calculation.
 
 For rate-based alerting, instrument message delivery attempts and acknowledgments in the consumer application or another reliable event source. Derive redelivery ratios from observed events over an explicit window. `/status` still includes the current `num_redelivered` snapshot; the metric fix is handled separately in the redelivery gauge PR. Remove `max_redelivery_rate` and `eval_window` from existing configurations before upgrading.
+
+### Securing HTTP endpoints
+
+The bridge now supports `server.bind_address` and optional bearer-token authentication for `/metrics` and `/status`. Configure `NKHB_SERVER_METRICS_TOKEN` and `NKHB_SERVER_STATUS_TOKEN` from Kubernetes Secrets; do not commit credentials to ConfigMaps or repository files. Supply `Authorization: Bearer <token>` from your monitoring client. `/healthz` and `/readyz` remain unauthenticated for Kubernetes probes. The heartbeat endpoint remains restricted to loopback callers; pod-local containers are trusted by this mechanism, not cryptographically authenticated.
+
+**Deployment:** `0.0.0.0` remains the default for compatibility and Kubernetes HTTP probes, which normally contact the pod IP. Binding to `127.0.0.1` can prevent kubelet HTTP probes from reaching the container. Use Kubernetes NetworkPolicies, avoid public Services/Ingress, and restrict access to the monitoring namespace. NetworkPolicies do not reliably isolate containers within the same pod. Tokens are optional and not a substitute for TLS or network isolation; use TLS termination through a trusted proxy if traffic leaves the pod. Prometheus scraping needs a matching authorization configuration when metrics authentication is enabled.
 
 ## Prometheus Metrics
 
