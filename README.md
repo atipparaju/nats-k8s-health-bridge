@@ -169,6 +169,16 @@ The separate `.github/workflows/kind-smoke.yml` workflow creates a Kind cluster,
 
 Run locally with Kind, Docker, Helm, kubectl and curl: build `nats-k8s-health-bridge:e2e`, load it into a Kind cluster named `health-bridge-ci`, apply `test/e2e/kind-smoke.yaml`, then run `bash test/e2e/kind-smoke.sh`.
 
+### Multi-platform container builds
+
+The Dockerfile uses BuildKit `TARGETOS` and `TARGETARCH` to cross-compile for the requested image platform rather than always producing an amd64 executable. Build and verify both architectures before release:
+
+```bash
+docker buildx build --platform linux/amd64,linux/arm64 --tag example/nats-k8s-health-bridge:test .
+```
+
+The build command validates compilation for each target but does not by itself prove successful execution on both architectures. Validate the published image manifest and run an arm64 smoke test before declaring multi-platform support production-ready.
+
 ## Building
 
 ```bash
