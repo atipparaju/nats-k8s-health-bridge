@@ -111,7 +111,7 @@ func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logge
 			"consumers":      states,
 			"timestamp":      time.Now().UTC(),
 		})
-	})
+	})))
 
 	// Health of the sidecar itself
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
