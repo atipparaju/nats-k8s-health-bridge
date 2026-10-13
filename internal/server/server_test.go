@@ -25,6 +25,7 @@ import (
 // mockHealthChecker implements HealthChecker for testing.
 type mockHealthChecker struct {
 	live     bool
+	connected bool
 	ready    bool
 	failures []string
 	states   []*health.ConsumerState
@@ -33,6 +34,8 @@ type mockHealthChecker struct {
 func (m *mockHealthChecker) IsLive() bool {
 	return m.live
 }
+
+func (m *mockHealthChecker) IsNATSConnected() bool { return m.connected }
 
 func (m *mockHealthChecker) IsReady() (bool, []string) {
 	return m.ready, m.failures
@@ -100,7 +103,7 @@ func TestHealthzHandler_Disconnected(t *testing.T) {
 }
 
 func TestReadyzHandler_Ready(t *testing.T) {
-	checker := &mockHealthChecker{live: true, ready: true}
+	checker := &mockHealthChecker{live: true, connected: true, ready: true}
 	handler := setupServer(checker)
 
 	rr := makeRequest(t, handler, "GET", "/readyz")
@@ -113,6 +116,7 @@ func TestReadyzHandler_Ready(t *testing.T) {
 func TestReadyzHandler_NotReady(t *testing.T) {
 	checker := &mockHealthChecker{
 		live:     true,
+		connected: true,
 		ready:    false,
 		failures: []string{"test-consumer: degraded"},
 	}
@@ -150,6 +154,7 @@ func TestReadyzHandler_NATSDisconnected(t *testing.T) {
 func TestStatusHandler(t *testing.T) {
 	checker := &mockHealthChecker{
 		live:  true,
+		connected: true,
 		ready: true,
 		states: []*health.ConsumerState{
 			{
