@@ -55,7 +55,8 @@ func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logge
 		})
 	})
 
-	// /readyz — readiness: are all consumers within thresholds?
+	// /readyz — readiness: NATS connectivity and consumer metadata availability.
+	// Threshold breaches affect readiness only with explicit strict-mode opt-in.
 	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
 		if !checker.IsNATSConnected() {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]any{
