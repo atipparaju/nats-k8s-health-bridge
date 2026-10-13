@@ -237,9 +237,14 @@ func (c *Checker) redeliveryRate(name string) (float64, bool) {
 	return float64(deltaRedelivered) / float64(deltaDelivered), true
 }
 
-// IsLive returns true if NATS is connected (liveness).
+// IsNATSConnected reports upstream NATS connectivity for readiness and diagnostics.
+func (c *Checker) IsNATSConnected() bool { return c.client.IsConnected() }
+
+// IsLive reports the health of the running bridge process, not the upstream NATS service.
+// A transient NATS outage must not trigger Kubernetes liveness restarts.
+// The HTTP server's ability to answer this probe establishes process liveness.
 func (c *Checker) IsLive() bool {
-	return c.client.IsConnected()
+	return true
 }
 
 // IsReady returns true if all consumers are healthy (readiness).

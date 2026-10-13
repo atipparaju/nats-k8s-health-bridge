@@ -86,7 +86,7 @@ func TestChecker_IsLive(t *testing.T) {
 		want      bool
 	}{
 		{"connected", true, true},
-		{"disconnected", false, false},
+		{"disconnected", false, true},
 	}
 
 	for _, tt := range tests {
