@@ -399,3 +399,21 @@ func TestChecker_FailedPollDoesNotRefreshLastSuccessful(t *testing.T) {
 	state := checker.States()[0]
 	if !state.LastSuccessful.Equal(original) || !state.LastChecked.After(original) { t.Fatalf("failed poll refreshed success timestamp: %+v", state) }
 }
+
+func TestChecker_ProcessingHeartbeatLifecycle(t *testing.T) {
+	consumers := defaultConsumers()
+	consumers[0].HeartbeatTimeout = time.Second
+	mock := &mockNATSClient{connected: true, consumerInfo: &natsclient.ConsumerInfo{}}
+	checker := newTestChecker(mock, consumers)
+	checker.pollAll(context.Background())
+	if ready, _ := checker.IsReady(); ready { t.Fatal("missing heartbeat must fail readiness") }
+	if checker.RecordHeartbeat("unknown") { t.Fatal("unknown consumer accepted") }
+	if !checker.RecordHeartbeat("test-consumer") { t.Fatal("heartbeat rejected") }
+	if ready, failures := checker.IsReady(); !ready { t.Fatalf("fresh heartbeat: %v", failures) }
+	checker.mu.Lock()
+	checker.states["test-consumer"].LastHeartbeat = time.Now().Add(-2*time.Second)
+	checker.mu.Unlock()
+	if ready, _ := checker.IsReady(); ready { t.Fatal("expired heartbeat must fail readiness") }
+	states := checker.States()
+	if states[0].Status != StatusUnknown { t.Fatalf("expired heartbeat status=%s", states[0].Status) }
+}
