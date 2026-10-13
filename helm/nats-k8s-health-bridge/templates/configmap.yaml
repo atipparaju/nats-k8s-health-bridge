@@ -21,13 +21,14 @@ data:
       max_reconnects: -1
     consumers:
     {{- range .Values.consumers }}
+    {{- $thresholds := .thresholds | default dict }}
       - name: {{ .name }}
         stream: {{ .stream }}
         consumer: {{ .consumer }}
         heartbeat_timeout: {{ .heartbeatTimeout | default "0s" | quote }}
         thresholds:
-          max_lag: {{ .thresholds.maxLag | default 0 }}
-          max_ack_pending: {{ .thresholds.maxAckPending | default 0 }}
+          max_lag: {{ get $thresholds "maxLag" | default 0 }}
+          max_ack_pending: {{ get $thresholds "maxAckPending" | default 0 }}
     {{- end }}
 ---
 # Example: how to inject this as a sidecar into your own Deployment
