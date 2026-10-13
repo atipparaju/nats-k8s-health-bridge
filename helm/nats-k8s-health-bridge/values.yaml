@@ -5,6 +5,11 @@ image:
 
 # Port the sidecar listens on
 port: 8080
+# HTTP endpoint security: configure matching values in the mounted bridge config.
+# Kubernetes HTTP probes normally require a pod-reachable bind address.
+# Use Kubernetes Secrets for diagnostic bearer tokens, not values.yaml.
+# Apply NetworkPolicies and avoid exposing the sidecar through public Services.
+
 
 # NATS connection
 nats:
