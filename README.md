@@ -176,6 +176,15 @@ The `.github/workflows/container-security.yml` workflow builds the image from th
 **Production security checklist:** Use a supported, patched Go toolchain and base image; review HIGH findings and exceptions; restrict container capabilities and use `runAsNonRoot`, `readOnlyRootFilesystem`, `allowPrivilegeEscalation: false`, and `capabilities.drop: [ALL]` where supported; apply NetworkPolicies; keep credentials in Secrets; and use immutable image digests in production. A clean scan does not prove that the image or deployment is secure.
 
 This workflow is a vulnerability gate, **not** SBOM publication, signed provenance, SLSA attestation, or a comprehensive dependency-review policy. Those remain follow-up work.
+### Multi-platform container builds
+
+The Dockerfile uses BuildKit `TARGETOS` and `TARGETARCH` to cross-compile for the requested image platform rather than always producing an amd64 executable. Build and verify both architectures before release:
+
+```bash
+docker buildx build --platform linux/amd64,linux/arm64 --tag example/nats-k8s-health-bridge:test .
+```
+
+The build command validates compilation for each target but does not by itself prove successful execution on both architectures. Validate the published image manifest and run an arm64 smoke test before declaring multi-platform support production-ready.
 
 ## Building
 
