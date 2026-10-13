@@ -56,6 +56,7 @@ type ConsumerConfig struct {
 	Stream     string     `mapstructure:"stream"`
 	Consumer   string     `mapstructure:"consumer"`
 	Thresholds Thresholds `mapstructure:"thresholds"`
+	HeartbeatTimeout time.Duration `mapstructure:"heartbeat_timeout"`
 }
 
 // Thresholds defines health threshold values for a consumer.
@@ -136,6 +137,7 @@ func validate(cfg *Config) error {
 		return fmt.Errorf("at least one consumer must be configured")
 	}
 	for i, c := range cfg.Consumers {
+		if c.HeartbeatTimeout < 0 { return fmt.Errorf("consumers[%d].heartbeat_timeout cannot be negative", i) }
 		if c.Stream == "" {
 			return fmt.Errorf("consumers[%d].stream is required", i)
 		}
