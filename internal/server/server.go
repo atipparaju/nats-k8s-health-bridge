@@ -45,14 +45,12 @@ func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logge
 	// /healthz — liveness: is NATS connected?
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if checker.IsLive() {
-			reg.NATSConnected.Set(1)
 			writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 			return
 		}
-		reg.NATSConnected.Set(0)
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{
 			"status": "error",
-			"reason": "not connected to NATS",
+			"reason": "bridge process unavailable",
 		})
 	})
 
@@ -61,7 +59,7 @@ func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logge
 		if !checker.IsLive() {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]any{
 				"status":  "not_ready",
-				"reasons": []string{"not connected to NATS"},
+				"reasons": []string{"bridge process unavailable"},
 			})
 			return
 		}
