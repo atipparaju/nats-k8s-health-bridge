@@ -29,6 +29,7 @@ type mockHealthChecker struct {
 	ready    bool
 	failures []string
 	states   []*health.ConsumerState
+	heartbeatName string
 }
 
 func (m *mockHealthChecker) IsLive() bool {
@@ -40,6 +41,8 @@ func (m *mockHealthChecker) IsNATSConnected() bool { return m.connected }
 func (m *mockHealthChecker) IsReady() (bool, []string) {
 	return m.ready, m.failures
 }
+
+func (m *mockHealthChecker) RecordHeartbeat(name string) bool { m.heartbeatName = name; return name == "test-consumer" }
 
 func (m *mockHealthChecker) States() []*health.ConsumerState {
 	return m.states
