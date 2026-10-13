@@ -161,6 +161,12 @@ The bridge now supports `server.bind_address` and optional bearer-token authenti
 
 The Helm chart now exposes `pollInterval`, `maxObservationAge`, `server.bindAddress`, `server.readinessFailOnDegraded`, and per-consumer `heartbeatTimeout`. Optional diagnostic bearer tokens must come from Kubernetes Secrets. The chart generates a ConfigMap and a commented sidecar example, **not a ready-to-run Deployment**; uncomment and adapt the environment-variable Secret references for your workload. Do not put bearer tokens in Helm values or ConfigMaps. Validate chart rendering with `helm lint helm/nats-k8s-health-bridge` and `helm template health-bridge helm/nats-k8s-health-bridge` before deployment.
 
+### Kubernetes CI smoke test
+
+The separate `.github/workflows/kind-smoke.yml` workflow creates a Kind cluster, lints and renders the Helm chart, builds the bridge image, deploys NATS and the bridge, and tests HTTP probe behavior. The fixture deliberately references a **missing** JetStream consumer: `/readyz` must return 503 while `/healthz` remains 200, including after NATS is scaled down. The test also checks that the bridge container does not restart during the outage. To keep the negative-case fixture running, its Kubernetes readiness probe targets `/healthz`; **production manifests should target `/readyz`**. This is a bounded smoke test, not yet a complete consumer-creation, recovery, heartbeat-expiry, or fault-injection suite.
+
+Run locally with Kind, Docker, Helm, kubectl and curl: build `nats-k8s-health-bridge:e2e`, load it into a Kind cluster named `health-bridge-ci`, apply `test/e2e/kind-smoke.yaml`, then run `bash test/e2e/kind-smoke.sh`.
+
 ## Building
 
 ```bash
