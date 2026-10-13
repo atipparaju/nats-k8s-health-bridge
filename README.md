@@ -163,6 +163,8 @@ The Helm chart now exposes `pollInterval`, `maxObservationAge`, `server.bindAddr
 
 ### Kubernetes CI smoke test
 
+The chart supports consumers with omitted `thresholds`; Helm renders zero values (disabled thresholds) rather than failing with a nil-pointer template error. This is exercised by the smoke workflow's minimal consumer values.
+
 The separate `.github/workflows/kind-smoke.yml` workflow creates a Kind cluster, lints and renders the Helm chart, builds the bridge image, deploys NATS and the bridge, and tests HTTP probe behavior. The fixture deliberately references a **missing** JetStream consumer: `/readyz` must return 503 while `/healthz` remains 200, including after NATS is scaled down. The test also checks that the bridge container does not restart during the outage. To keep the negative-case fixture running, its Kubernetes readiness probe targets `/healthz`; **production manifests should target `/readyz`**. This is a bounded smoke test, not yet a complete consumer-creation, recovery, heartbeat-expiry, or fault-injection suite.
 
 Run locally with Kind, Docker, Helm, kubectl and curl: build `nats-k8s-health-bridge:e2e`, load it into a Kind cluster named `health-bridge-ci`, apply `test/e2e/kind-smoke.yaml`, then run `bash test/e2e/kind-smoke.sh`.
