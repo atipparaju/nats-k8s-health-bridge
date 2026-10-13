@@ -219,3 +219,8 @@ func TestLoad_ObservationAgeDefaultsAndValidation(t *testing.T) {
 	path = writeTestConfig(t, "poll_interval: 10s\nmax_observation_age: 5s\nnats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
 	if _, err := Load(path); err == nil { t.Fatal("expected invalid max_observation_age error") }
 }
+
+func TestLoad_NegativeHeartbeatTimeout(t *testing.T) {
+	path := writeTestConfig(t, "nats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n    heartbeat_timeout: -1s\n")
+	if _, err := Load(path); err == nil { t.Fatal("expected negative heartbeat timeout error") }
+}
