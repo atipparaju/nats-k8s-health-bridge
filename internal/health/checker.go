@@ -47,6 +47,7 @@ type ConsumerState struct {
 	NumRedelivered int       `json:"num_redelivered"`
 	LastChecked    time.Time `json:"last_checked"`
 	LastSuccessful time.Time `json:"last_successful,omitempty"`
+	LastHeartbeat time.Time `json:"last_heartbeat,omitempty"`
 	LastError      string    `json:"last_error,omitempty"`
 	Reasons        []string  `json:"reasons,omitempty"`
 }
@@ -188,14 +189,36 @@ func (c *Checker) IsLive() bool {
 // Degraded thresholds are observational by default: backlog alone must not evict a
 // functioning consumer from Kubernetes service. Operators may explicitly opt in
 // to strict threshold-based readiness via server.readiness_fail_on_degraded.
+// RecordHeartbeat records an application-reported processing heartbeat.
+// Only configured consumer names are accepted; unknown names are rejected.
+func (c *Checker) RecordHeartbeat(name string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	state, ok := c.states[name]
+	if !ok { return false }
+	state.LastHeartbeat = time.Now()
+	return true
+}
+
+func (c *Checker) heartbeatExpired(name string, state *ConsumerState, now time.Time) bool {
+	for _, consumer := range c.cfg.Consumers {
+		if consumer.Name == name && consumer.HeartbeatTimeout > 0 {
+			return state.LastHeartbeat.IsZero() || now.Sub(state.LastHeartbeat) > consumer.HeartbeatTimeout
+		}
+	}
+	return false
+}
+
 func (c *Checker) IsReady() (bool, []string) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
 	var failures []string
 	for name, state := range c.states {
-		if state.Status == StatusUnknown || c.stale(state, time.Now()) || (c.cfg.Server.ReadinessFailOnDegraded && state.Status == StatusDegraded) {
-			if c.stale(state, time.Now()) {
+		if state.Status == StatusUnknown || c.stale(state, time.Now()) || c.heartbeatExpired(name, state, time.Now()) || (c.cfg.Server.ReadinessFailOnDegraded && state.Status == StatusDegraded) {
+			if c.heartbeatExpired(name, state, time.Now()) {
+				failures = append(failures, fmt.Sprintf("%s: processing heartbeat missing or expired", name))
+			} else if c.stale(state, time.Now()) {
 				failures = append(failures, fmt.Sprintf("%s: stale consumer observation", name))
 			} else {
 				failures = append(failures, fmt.Sprintf("%s: %s", name, state.Status))
@@ -217,9 +240,13 @@ func (c *Checker) States() []*ConsumerState {
 	defer c.mu.RUnlock()
 
 	out := make([]*ConsumerState, 0, len(c.states))
-	for _, s := range c.states {
+	for name, s := range c.states {
 		copy := *s
 		copy.Reasons = append([]string(nil), s.Reasons...)
+		if c.heartbeatExpired(name, s, time.Now()) {
+			copy.Status = StatusUnknown
+			copy.Reasons = append(copy.Reasons, "processing heartbeat missing or expired")
+		}
 		if c.stale(s, time.Now()) {
 			copy.Status = StatusUnknown
 			copy.Reasons = append(copy.Reasons, "consumer observation is stale")
