@@ -27,6 +27,7 @@ import (
 // This enables unit testing of HTTP handlers without a real health checker.
 type HealthChecker interface {
 	IsLive() bool
+	IsNATSConnected() bool
 	IsReady() (bool, []string)
 	States() []*health.ConsumerState
 }
@@ -56,10 +57,10 @@ func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logge
 
 	// /readyz — readiness: are all consumers within thresholds?
 	mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
-		if !checker.IsLive() {
+		if !checker.IsNATSConnected() {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]any{
 				"status":  "not_ready",
-				"reasons": []string{"bridge process unavailable"},
+				"reasons": []string{"not connected to NATS"},
 			})
 			return
 		}
@@ -86,7 +87,7 @@ func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logge
 		states := checker.States()
 		ready, failures := checker.IsReady()
 		writeJSON(w, http.StatusOK, map[string]any{
-			"nats_connected": checker.IsLive(),
+			"nats_connected": checker.IsNATSConnected(),
 			"ready":          ready,
 			"failures":       failures,
 			"consumers":      states,
