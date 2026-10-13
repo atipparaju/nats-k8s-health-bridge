@@ -1,5 +1,7 @@
 # Stage 1: Build
-FROM golang:1.24-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
 
 # Install ca-certificates for TLS support in final image
 RUN apk add --no-cache ca-certificates git
@@ -12,7 +14,7 @@ RUN go mod download
 
 # Copy source and build
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build \
     -ldflags="-s -w -X main.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev)" \
     -trimpath \
     -o /nats-k8s-health-bridge \
