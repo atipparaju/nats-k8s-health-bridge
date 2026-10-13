@@ -250,3 +250,25 @@ func TestContentTypeJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestHeartbeatHandler_RejectsRemoteCaller(t *testing.T) {
+	checker := &mockHealthChecker{}
+	handler := setupServer(checker)
+	req := httptest.NewRequest(http.MethodPost, "/heartbeat/test-consumer", nil)
+	req.RemoteAddr = "192.0.2.20:1234"
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusForbidden { t.Fatalf("remote status=%d, want 403", rr.Code) }
+}
+
+func TestHeartbeatHandler_AcceptsLoopbackAndRejectsUnknown(t *testing.T) {
+	checker := &mockHealthChecker{}
+	handler := setupServer(checker)
+	for _, tt := range []struct{name string; code int}{{"test-consumer", http.StatusOK}, {"unknown", http.StatusNotFound}} {
+		req := httptest.NewRequest(http.MethodPost, "/heartbeat/"+tt.name, nil)
+		req.RemoteAddr = "127.0.0.1:1234"
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+		if rr.Code != tt.code { t.Fatalf("%s: status=%d want=%d", tt.name, rr.Code, tt.code) }
+	}
+}
