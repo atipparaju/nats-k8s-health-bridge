@@ -11,6 +11,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -34,6 +35,9 @@ type ServerConfig struct {
 	// By default, degradation is observable but does not fail Kubernetes readiness.
 	ReadinessFailOnDegraded bool `mapstructure:"readiness_fail_on_degraded"`
 	Port            int           `mapstructure:"port"`
+	BindAddress string `mapstructure:"bind_address"`
+	MetricsToken string `mapstructure:"metrics_token"`
+	StatusToken string `mapstructure:"status_token"`
 	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
 }
 
@@ -76,6 +80,7 @@ func Load(cfgFile string) (*Config, error) {
 	v.SetDefault("poll_interval", "10s")
 	v.SetDefault("max_observation_age", "30s")
 	v.SetDefault("server.port", 8080)
+	v.SetDefault("server.bind_address", "0.0.0.0")
 	v.SetDefault("server.readiness_fail_on_degraded", false)
 	v.SetDefault("server.shutdown_timeout", "10s")
 	v.SetDefault("nats.url", "nats://localhost:4222")
@@ -130,6 +135,8 @@ func validate(cfg *Config) error {
 	if cfg.NATS.URL == "" {
 		return fmt.Errorf("nats.url is required")
 	}
+	if cfg.Server.BindAddress == "" { return fmt.Errorf("server.bind_address must not be empty") }
+	if ip := net.ParseIP(cfg.Server.BindAddress); ip == nil { return fmt.Errorf("server.bind_address must be an IP address") }
 	if cfg.Server.Port < 1 || cfg.Server.Port > 65535 {
 		return fmt.Errorf("server.port must be between 1 and 65535")
 	}
