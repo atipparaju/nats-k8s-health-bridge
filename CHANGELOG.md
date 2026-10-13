@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Fail readiness on stale consumer observations rather than reusing outdated successful poll results; report stale status in `/status`.
+
+### Added
+- Configurable `max_observation_age` (default `30s`) and `last_successful` consumer timestamp.
+
 - Removed the misleading redelivery-rate health threshold, which inferred delivery rates from non-monotonic JetStream consumer snapshots.
 
 ### Changed
