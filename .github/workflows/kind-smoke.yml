@@ -1,0 +1,47 @@
+name: Kubernetes Smoke Test
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  kind-smoke:
+    name: Kind / Probe Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: helm/kind-action@v1.12.0
+        with:
+          cluster_name: health-bridge-ci
+      - uses: azure/setup-helm@v4.3.0
+      - name: Validate Helm chart
+        run: |
+          helm lint helm/nats-k8s-health-bridge
+          helm template health-bridge helm/nats-k8s-health-bridge \
+            --set consumers[0].name=worker \
+            --set consumers[0].stream=TEST \
+            --set consumers[0].consumer=worker > /tmp/health-bridge-rendered.yaml
+          test -s /tmp/health-bridge-rendered.yaml
+      - name: Build and load image into Kind
+        run: |
+          docker build -t nats-k8s-health-bridge:e2e .
+          kind load docker-image nats-k8s-health-bridge:e2e --name health-bridge-ci
+      - name: Deploy NATS and bridge
+        run: |
+          kubectl apply -f test/e2e/kind-smoke.yaml
+          kubectl rollout status deployment/nats --timeout=120s
+          kubectl rollout status deployment/health-bridge --timeout=120s
+      - name: Verify probes and diagnostics
+        run: bash test/e2e/kind-smoke.sh
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get pods -o wide || true
+          kubectl describe pods || true
+          kubectl logs deployment/nats --tail=100 || true
+          kubectl logs deployment/health-bridge --tail=100 || true
