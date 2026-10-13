@@ -13,8 +13,8 @@ NATS JetStream consumers running inside Kubernetes pods have no native way to si
 
 | Endpoint | Use | Returns |
 |---|---|---|
-| `GET /healthz` | Kubernetes **liveness** probe | `200` if NATS connected, `503` otherwise |
-| `GET /readyz` | Kubernetes **readiness** probe | `200` if all consumers within thresholds, `503` otherwise |
+| `GET /healthz` | Kubernetes **liveness** probe | `200` while the bridge HTTP process is responsive (independent of NATS connectivity) |
+| `GET /readyz` | Kubernetes **readiness** probe | `200` if NATS is connected and all consumers are within thresholds, `503` otherwise |
 | `GET /metrics` | Prometheus scrape | Consumer lag, ack pending, redelivered, connection state |
 | `GET /status` | Debug JSON | Full state of all monitored consumers |
 
