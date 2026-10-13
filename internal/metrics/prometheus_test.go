@@ -59,7 +59,7 @@ func TestNewRegistry_GaugeLabels(t *testing.T) {
 	reg.ConsumerUp.WithLabelValues("test-name", "TEST_STREAM", "test-consumer").Set(1)
 	reg.ConsumerLag.WithLabelValues("test-name", "TEST_STREAM", "test-consumer").Set(42)
 	reg.ConsumerAckPending.WithLabelValues("test-name", "TEST_STREAM", "test-consumer").Set(10)
-	reg.ConsumerRedelivered.WithLabelValues("test-name", "TEST_STREAM", "test-consumer").Add(5)
+	reg.ConsumerRedelivered.WithLabelValues("test-name", "TEST_STREAM", "test-consumer").Set(5)
 	reg.NATSConnected.Set(1)
 
 	// Verify we can gather without error
@@ -78,7 +78,7 @@ func TestNewRegistry_GaugeLabels(t *testing.T) {
 		"nats_consumer_up",
 		"nats_consumer_lag",
 		"nats_consumer_ack_pending",
-		"nats_consumer_redelivered_total",
+		"nats_consumer_redelivered",
 		"nats_connected",
 	}
 	for _, name := range expected {
