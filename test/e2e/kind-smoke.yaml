@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: nats}
+  template:
+    metadata:
+      labels: {app: nats}
+    spec:
+      containers:
+        - name: nats
+          image: nats:2.11-alpine
+          args: ["-js"]
+          ports:
+            - containerPort: 4222
+          readinessProbe:
+            tcpSocket: {port: 4222}
+            periodSeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats
+spec:
+  selector: {app: nats}
+  ports:
+    - port: 4222
+      targetPort: 4222
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bridge-smoke-config
+data:
+  config.yaml: |
+    poll_interval: 2s
+    max_observation_age: 10s
+    server:
+      port: 8080
+      bind_address: 0.0.0.0
+      shutdown_timeout: 5s
+    nats:
+      url: nats://nats:4222
+    consumers:
+      - name: absent-worker
+        stream: TEST
+        consumer: worker
+        thresholds:
+          max_lag: 100
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: health-bridge}
+  template:
+    metadata:
+      labels: {app: health-bridge}
+    spec:
+      containers:
+        - name: bridge
+          image: nats-k8s-health-bridge:e2e
+          imagePullPolicy: Never
+          args: ["--config", "/etc/bridge/config.yaml"]
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: config
+              mountPath: /etc/bridge
+          livenessProbe:
+            httpGet: {path: /healthz, port: 8080}
+            periodSeconds: 3
+          # Readiness deliberately uses process liveness for this negative-case
+          # smoke fixture. The script separately asserts /readyz returns 503
+          # for a missing consumer; production deployments use /readyz.
+          readinessProbe:
+            httpGet: {path: /healthz, port: 8080}
+            periodSeconds: 3
+      volumes:
+        - name: config
+          configMap:
+            name: bridge-smoke-config
