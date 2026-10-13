@@ -157,6 +157,10 @@ The bridge now supports `server.bind_address` and optional bearer-token authenti
 | `nats_consumer_redelivered` | Gauge | `consumer_name`, `stream`, `consumer` | Current JetStream redelivery snapshot (not a cumulative total) |
 | `nats_connected` | Gauge | — | `1` if connected to NATS |
 
+### Helm configuration parity
+
+The Helm chart now exposes `pollInterval`, `maxObservationAge`, `server.bindAddress`, `server.readinessFailOnDegraded`, and per-consumer `heartbeatTimeout`. Optional diagnostic bearer tokens must come from Kubernetes Secrets. The chart generates a ConfigMap and a commented sidecar example, **not a ready-to-run Deployment**; uncomment and adapt the environment-variable Secret references for your workload. Do not put bearer tokens in Helm values or ConfigMaps. Validate chart rendering with `helm lint helm/nats-k8s-health-bridge` and `helm template health-bridge helm/nats-k8s-health-bridge` before deployment.
+
 ## Building
 
 ```bash
