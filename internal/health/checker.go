@@ -50,13 +50,6 @@ type ConsumerState struct {
 	Reasons        []string  `json:"reasons,omitempty"`
 }
 
-// redeliverySample records a point-in-time observation of redelivery counts.
-type redeliverySample struct {
-	timestamp      time.Time
-	numRedelivered int
-	totalDelivered uint64 // numPending + numAckPending + (implicit delivered)
-}
-
 // Checker polls JetStream consumer info and evaluates health.
 type Checker struct {
 	client           NATSClient
@@ -65,7 +58,6 @@ type Checker struct {
 	logger           *slog.Logger
 	mu               sync.RWMutex
 	states           map[string]*ConsumerState
-	redeliverySamples map[string][]redeliverySample
 }
 
 // NewChecker creates a new health checker.
@@ -85,7 +77,6 @@ func NewChecker(client NATSClient, cfg *config.Config, reg *metrics.Registry, lo
 		reg:               reg,
 		logger:            logger,
 		states:            states,
-		redeliverySamples: make(map[string][]redeliverySample, len(cfg.Consumers)),
 	}
 }
 
@@ -144,11 +135,8 @@ func (c *Checker) pollOne(ctx context.Context, consumerCfg config.ConsumerConfig
 	c.reg.ConsumerAckPending.WithLabelValues(consumerCfg.Name, consumerCfg.Stream, consumerCfg.Consumer).Set(float64(info.NumAckPending))
 	c.reg.ConsumerRedelivered.WithLabelValues(consumerCfg.Name, consumerCfg.Stream, consumerCfg.Consumer).Set(float64(info.NumRedelivered))
 
-	// Record redelivery sample for rate calculation
-	c.recordRedeliverySample(consumerCfg.Name, info, consumerCfg.Thresholds.EvalWindow)
-
 	// Evaluate thresholds
-	reasons := c.evaluate(consumerCfg.Name, info, consumerCfg.Thresholds)
+	reasons := c.evaluate(info, consumerCfg.Thresholds)
 	if len(reasons) == 0 {
 		state.Status = StatusHealthy
 		state.Reasons = nil
@@ -173,7 +161,7 @@ func (c *Checker) pollOne(ctx context.Context, consumerCfg config.ConsumerConfig
 	)
 }
 
-func (c *Checker) evaluate(consumerName string, info *natsclient.ConsumerInfo, t config.Thresholds) []string {
+func (c *Checker) evaluate(info *natsclient.ConsumerInfo, t config.Thresholds) []string {
 	var reasons []string
 	if t.MaxLag > 0 && info.NumPending > t.MaxLag {
 		reasons = append(reasons, fmt.Sprintf("lag %d exceeds max_lag %d", info.NumPending, t.MaxLag))
@@ -181,60 +169,7 @@ func (c *Checker) evaluate(consumerName string, info *natsclient.ConsumerInfo, t
 	if t.MaxAckPending > 0 && uint64(info.NumAckPending) > t.MaxAckPending {
 		reasons = append(reasons, fmt.Sprintf("ack_pending %d exceeds max_ack_pending %d", info.NumAckPending, t.MaxAckPending))
 	}
-	if t.MaxRedeliveryRate > 0 {
-		if rate, ok := c.redeliveryRate(consumerName); ok && rate > t.MaxRedeliveryRate {
-			reasons = append(reasons, fmt.Sprintf("redelivery_rate %.2f exceeds max_redelivery_rate %.2f", rate, t.MaxRedeliveryRate))
-		}
-	}
 	return reasons
-}
-
-// recordRedeliverySample appends a redelivery observation and prunes samples outside the eval window.
-func (c *Checker) recordRedeliverySample(name string, info *natsclient.ConsumerInfo, window time.Duration) {
-	now := time.Now()
-	// Total delivered ≈ redelivered + ack_pending + successfully processed
-	// We use numRedelivered as the numerator and track its delta over the window.
-	sample := redeliverySample{
-		timestamp:      now,
-		numRedelivered: info.NumRedelivered,
-		totalDelivered: uint64(info.NumAckPending) + uint64(info.NumRedelivered),
-	}
-	samples := append(c.redeliverySamples[name], sample)
-
-	// Prune samples older than the eval window
-	if window > 0 {
-		cutoff := now.Add(-window)
-		start := 0
-		for start < len(samples) && samples[start].timestamp.Before(cutoff) {
-			start++
-		}
-		// Keep at least the oldest sample at or before the cutoff for delta calculation
-		if start > 0 {
-			start--
-		}
-		samples = samples[start:]
-	}
-	c.redeliverySamples[name] = samples
-}
-
-// redeliveryRate computes the redelivery rate over the eval window as:
-// delta(numRedelivered) / delta(totalDelivered) between the oldest and newest samples.
-// Returns (rate, true) if calculable, or (0, false) if insufficient data.
-func (c *Checker) redeliveryRate(name string) (float64, bool) {
-	samples := c.redeliverySamples[name]
-	if len(samples) < 2 {
-		return 0, false
-	}
-	oldest := samples[0]
-	newest := samples[len(samples)-1]
-
-	deltaRedelivered := newest.numRedelivered - oldest.numRedelivered
-	deltaDelivered := newest.totalDelivered - oldest.totalDelivered
-
-	if deltaDelivered == 0 {
-		return 0, false
-	}
-	return float64(deltaRedelivered) / float64(deltaDelivered), true
 }
 
 // IsNATSConnected reports upstream NATS connectivity for readiness and diagnostics.
