@@ -22,6 +22,7 @@ import (
 type Config struct {
 	LogLevel  string        `mapstructure:"log_level"`
 	PollInterval time.Duration `mapstructure:"poll_interval"`
+	MaxObservationAge time.Duration `mapstructure:"max_observation_age"`
 	Server    ServerConfig  `mapstructure:"server"`
 	NATS      NATSConfig    `mapstructure:"nats"`
 	Consumers []ConsumerConfig `mapstructure:"consumers"`
@@ -72,6 +73,7 @@ func Load(cfgFile string) (*Config, error) {
 	// Defaults
 	v.SetDefault("log_level", "info")
 	v.SetDefault("poll_interval", "10s")
+	v.SetDefault("max_observation_age", "30s")
 	v.SetDefault("server.port", 8080)
 	v.SetDefault("server.readiness_fail_on_degraded", false)
 	v.SetDefault("server.shutdown_timeout", "10s")
@@ -121,6 +123,9 @@ func Load(cfgFile string) (*Config, error) {
 }
 
 func validate(cfg *Config) error {
+	if cfg.PollInterval <= 0 { return fmt.Errorf("poll_interval must be positive") }
+	if cfg.MaxObservationAge < 0 { return fmt.Errorf("max_observation_age cannot be negative") }
+	if cfg.MaxObservationAge > 0 && cfg.MaxObservationAge <= cfg.PollInterval { return fmt.Errorf("max_observation_age must exceed poll_interval") }
 	if cfg.NATS.URL == "" {
 		return fmt.Errorf("nats.url is required")
 	}
