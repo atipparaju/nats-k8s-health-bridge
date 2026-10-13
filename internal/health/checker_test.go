@@ -336,167 +336,6 @@ func TestChecker_RunStopsOnContextCancel(t *testing.T) {
 	}
 }
 
-func TestChecker_RedeliveryRate_Degraded(t *testing.T) {
-	consumers := []config.ConsumerConfig{
-		{
-			Name:     "redeliver-test",
-			Stream:   "TEST",
-			Consumer: "test",
-			Thresholds: config.Thresholds{
-				MaxRedeliveryRate: 0.1, // 10%
-				EvalWindow:        1 * time.Minute,
-			},
-		},
-	}
-
-	// First poll: baseline
-	mock := &mockNATSClient{
-		connected: true,
-		consumerInfo: &natsclient.ConsumerInfo{
-			NumPending:     0,
-			NumAckPending:  100,
-			NumRedelivered: 5, // 5 redelivered out of 105 total
-		},
-	}
-	checker := newTestChecker(mock, consumers)
-	ctx := context.Background()
-	checker.pollAll(ctx)
-
-	// Second poll: redeliveries spike — 50 redelivered out of 100 delta = 50%
-	mock.consumerInfo = &natsclient.ConsumerInfo{
-		NumPending:     0,
-		NumAckPending:  100,
-		NumRedelivered: 55, // delta = 50 redelivered
-	}
-	checker.pollAll(ctx)
-
-	states := checker.States()
-	if states[0].Status != StatusDegraded {
-		t.Errorf("status = %q, want %q (high redelivery rate)", states[0].Status, StatusDegraded)
-	}
-	foundReason := false
-	for _, r := range states[0].Reasons {
-		if len(r) > 0 {
-			foundReason = true
-		}
-	}
-	if !foundReason {
-		t.Error("expected redelivery rate reason in degraded state")
-	}
-}
-
-func TestChecker_RedeliveryRate_Healthy(t *testing.T) {
-	consumers := []config.ConsumerConfig{
-		{
-			Name:     "redeliver-ok",
-			Stream:   "TEST",
-			Consumer: "test",
-			Thresholds: config.Thresholds{
-				MaxRedeliveryRate: 0.5, // 50% — generous threshold
-				EvalWindow:        1 * time.Minute,
-			},
-		},
-	}
-
-	mock := &mockNATSClient{
-		connected: true,
-		consumerInfo: &natsclient.ConsumerInfo{
-			NumPending:     0,
-			NumAckPending:  100,
-			NumRedelivered: 5,
-		},
-	}
-	checker := newTestChecker(mock, consumers)
-	ctx := context.Background()
-	checker.pollAll(ctx)
-
-	// Small increase in redeliveries — well under 50%
-	mock.consumerInfo = &natsclient.ConsumerInfo{
-		NumPending:     0,
-		NumAckPending:  100,
-		NumRedelivered: 10, // delta = 5 redelivered, delta delivered = 5, rate = 1.0... hmm
-	}
-	checker.pollAll(ctx)
-
-	// With only 5 delta redelivered and 5 delta total, rate = 1.0 which exceeds 0.5
-	// Let's fix: make delta delivered much larger
-	mock.consumerInfo = &natsclient.ConsumerInfo{
-		NumPending:     0,
-		NumAckPending:  200,
-		NumRedelivered: 12, // delta from first: 7 redeliv / (200+12 - 100 - 5) = 7/107 ≈ 0.065
-	}
-	checker.pollAll(ctx)
-
-	states := checker.States()
-	if states[0].Status != StatusHealthy {
-		t.Errorf("status = %q, want %q (low redelivery rate)", states[0].Status, StatusHealthy)
-	}
-}
-
-func TestChecker_RedeliveryRate_InsufficientData(t *testing.T) {
-	consumers := []config.ConsumerConfig{
-		{
-			Name:     "insufficient",
-			Stream:   "TEST",
-			Consumer: "test",
-			Thresholds: config.Thresholds{
-				MaxRedeliveryRate: 0.01, // very low threshold
-				EvalWindow:        1 * time.Minute,
-			},
-		},
-	}
-
-	mock := &mockNATSClient{
-		connected: true,
-		consumerInfo: &natsclient.ConsumerInfo{
-			NumPending:     0,
-			NumAckPending:  100,
-			NumRedelivered: 50, // high absolute number but only one sample
-		},
-	}
-	checker := newTestChecker(mock, consumers)
-	ctx := context.Background()
-
-	// Only one poll — not enough data to compute rate
-	checker.pollAll(ctx)
-
-	states := checker.States()
-	if states[0].Status != StatusHealthy {
-		t.Errorf("status = %q, want %q (insufficient data for rate)", states[0].Status, StatusHealthy)
-	}
-}
-
-func TestChecker_RedeliveryRate_DisabledWhenZero(t *testing.T) {
-	consumers := []config.ConsumerConfig{
-		{
-			Name:     "disabled-rate",
-			Stream:   "TEST",
-			Consumer: "test",
-			Thresholds: config.Thresholds{
-				MaxRedeliveryRate: 0, // disabled
-				EvalWindow:        1 * time.Minute,
-			},
-		},
-	}
-
-	mock := &mockNATSClient{
-		connected: true,
-		consumerInfo: &natsclient.ConsumerInfo{
-			NumRedelivered: 1000,
-			NumAckPending:  10,
-		},
-	}
-	checker := newTestChecker(mock, consumers)
-	ctx := context.Background()
-	checker.pollAll(ctx)
-	checker.pollAll(ctx)
-
-	states := checker.States()
-	if states[0].Status != StatusHealthy {
-		t.Errorf("status = %q, want %q (rate check disabled)", states[0].Status, StatusHealthy)
-	}
-}
-
 // Strict mode preserves threshold-based readiness for deployments that opt in.
 func TestChecker_StrictReadinessFailsOnDegradation(t *testing.T) {
 	mock := &mockNATSClient{connected: true, consumerInfo: &natsclient.ConsumerInfo{NumPending: 1500}}
@@ -518,5 +357,16 @@ func TestChecker_DefaultReadinessPreservesDegradedStatus(t *testing.T) {
 	states := checker.States()
 	if len(states) != 1 || states[0].Status != StatusDegraded || len(states[0].Reasons) == 0 {
 		t.Fatalf("degradation must remain observable: %+v", states)
+	}
+}
+
+// Redelivery snapshots are diagnostic only; they must not imply a fabricated rate.
+func TestChecker_RedeliverySnapshotDoesNotDegrade(t *testing.T) {
+	mock := &mockNATSClient{connected: true, consumerInfo: &natsclient.ConsumerInfo{NumRedelivered: 500}}
+	checker := newTestChecker(mock, defaultConsumers())
+	checker.pollAll(context.Background())
+	states := checker.States()
+	if len(states) != 1 || states[0].Status != StatusHealthy || states[0].NumRedelivered != 500 {
+		t.Fatalf("unexpected consumer snapshot: %+v", states)
 	}
 }
