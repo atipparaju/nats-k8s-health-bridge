@@ -370,3 +370,32 @@ func TestChecker_RedeliverySnapshotDoesNotDegrade(t *testing.T) {
 		t.Fatalf("unexpected consumer snapshot: %+v", states)
 	}
 }
+
+func TestChecker_StaleObservationFailsReadiness(t *testing.T) {
+	mock := &mockNATSClient{connected: true, consumerInfo: &natsclient.ConsumerInfo{}}
+	checker := newTestChecker(mock, defaultConsumers())
+	checker.cfg.MaxObservationAge = time.Second
+	checker.pollAll(context.Background())
+	checker.mu.Lock()
+	checker.states["test-consumer"].LastSuccessful = time.Now().Add(-2 * time.Second)
+	checker.mu.Unlock()
+	ready, failures := checker.IsReady()
+	if ready || len(failures) == 0 { t.Fatalf("stale observation: ready=%v failures=%v", ready, failures) }
+	states := checker.States()
+	if states[0].Status != StatusUnknown { t.Fatalf("stale status=%s, want unknown", states[0].Status) }
+	checker.pollAll(context.Background())
+	ready, failures = checker.IsReady()
+	if !ready { t.Fatalf("fresh observation should recover: %v", failures) }
+}
+
+func TestChecker_FailedPollDoesNotRefreshLastSuccessful(t *testing.T) {
+	mock := &mockNATSClient{connected: true, consumerInfo: &natsclient.ConsumerInfo{}}
+	checker := newTestChecker(mock, defaultConsumers())
+	checker.cfg.MaxObservationAge = time.Second
+	checker.pollAll(context.Background())
+	original := checker.States()[0].LastSuccessful
+	mock.err = fmt.Errorf("temporary failure")
+	checker.pollAll(context.Background())
+	state := checker.States()[0]
+	if !state.LastSuccessful.Equal(original) || !state.LastChecked.After(original) { t.Fatalf("failed poll refreshed success timestamp: %+v", state) }
+}
