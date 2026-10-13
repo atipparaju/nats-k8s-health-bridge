@@ -17,6 +17,7 @@ NATS JetStream consumers running inside Kubernetes pods have no native way to si
 | `GET /readyz` | Kubernetes **readiness** probe | `200` if NATS is connected and consumer status is available; threshold breaches only fail readiness when explicitly enabled |
 | `GET /metrics` | Prometheus scrape | Consumer lag, ack pending, redelivered, connection state |
 | `GET /status` | Debug JSON | Full state of all monitored consumers |
+| `POST /heartbeat/{consumer}` | Optional application heartbeat | `200` for configured consumer from loopback; `403` for non-loopback |
 
 ## Quickstart
 
@@ -118,6 +119,12 @@ See [`config.yaml`](config.yaml) for a fully annotated example.
 ### Observation freshness
 
 The bridge tracks both `last_checked` (most recent poll attempt) and `last_successful` (most recent successful JetStream consumer-info response). If a consumer has not been observed successfully within `max_observation_age` (default `30s`, with a `10s` poll interval), `/readyz` returns `503` even if the last recorded state was healthy. `/status` exposes an effective `unknown` state and a stale reason, without modifying the stored last observation. Set the timeout above the poll interval with sufficient margin for retries and network latency. A zero value disables freshness enforcement only for programmatically constructed configurations; file-based configurations default to `30s`.
+
+### Application processing heartbeat (opt-in)
+
+JetStream consumer metadata cannot prove that an application is actively processing work. To enable cooperative heartbeat monitoring, configure `heartbeat_timeout: 30s` on an individual consumer and have the application container call `POST http://127.0.0.1:8080/heartbeat/order-processor` periodically (for example, every 10 seconds). The route only accepts loopback callers, and rejects unknown consumer names. Kubernetes containers in the same pod share a network namespace, so a local call can reach the sidecar.
+
+An absent or expired heartbeat fails `/readyz` and is reported as `unknown` in `/status`; a fresh heartbeat restores the normal JetStream-based readiness evaluation. Disabled by default (zero timeout). **Security:** loopback is not an authentication boundary between containers sharing the pod network namespace. Only use with trusted pod-local workloads. Do not forward this endpoint through an ingress or service proxy. A heartbeat proves only that the application is reporting progress; for stuck-work detection, emit it from a processing-progress watchdog rather than an unrelated timer.
 
 ### Readiness versus degradation
 

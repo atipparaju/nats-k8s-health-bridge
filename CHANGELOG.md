@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fail readiness on stale consumer observations rather than reusing outdated successful poll results; report stale status in `/status`.
 
 ### Added
+- Optional per-consumer application processing heartbeat (`heartbeat_timeout`) and loopback-only `POST /heartbeat/{consumer}` endpoint to detect stalled consumers.
 - Configurable `max_observation_age` (default `30s`) and `last_successful` consumer timestamp.
 
 - Removed the misleading redelivery-rate health threshold, which inferred delivery rates from non-monotonic JetStream consumer snapshots.

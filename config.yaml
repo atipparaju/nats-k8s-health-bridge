@@ -52,6 +52,8 @@ consumers:
   - name: order-processor          # Human-readable label (used in metrics labels)
     stream: ORDERS                  # JetStream stream name
     consumer: order-processor       # JetStream consumer name (durable)
+    # Optional: require pod-local application heartbeat every 30s.
+    # heartbeat_timeout: 30s
     thresholds:
       max_lag: 1000                 # Alert if num_pending exceeds this (0 = disabled)
       max_ack_pending: 500          # Alert if num_ack_pending exceeds this (0 = disabled)
