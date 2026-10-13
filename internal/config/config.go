@@ -61,8 +61,6 @@ type ConsumerConfig struct {
 type Thresholds struct {
 	MaxLag            uint64        `mapstructure:"max_lag"`
 	MaxAckPending     uint64        `mapstructure:"max_ack_pending"`
-	MaxRedeliveryRate float64       `mapstructure:"max_redelivery_rate"`
-	EvalWindow        time.Duration `mapstructure:"eval_window"`
 }
 
 // Load reads configuration from a YAML file and environment variables.
