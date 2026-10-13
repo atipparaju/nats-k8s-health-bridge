@@ -127,7 +127,7 @@ Set `server.readiness_fail_on_degraded: true` only if your deployment explicitly
 | `nats_consumer_up` | Gauge | `consumer_name`, `stream`, `consumer` | `1` = healthy, `0` = degraded |
 | `nats_consumer_lag` | Gauge | `consumer_name`, `stream`, `consumer` | `num_pending` messages |
 | `nats_consumer_ack_pending` | Gauge | `consumer_name`, `stream`, `consumer` | `num_ack_pending` |
-| `nats_consumer_redelivered_total` | Counter | `consumer_name`, `stream`, `consumer` | Cumulative redeliveries |
+| `nats_consumer_redelivered` | Gauge | `consumer_name`, `stream`, `consumer` | Current JetStream redelivery snapshot (not a cumulative total) |
 | `nats_connected` | Gauge | — | `1` if connected to NATS |
 
 ## Building
