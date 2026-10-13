@@ -5,6 +5,14 @@ image:
 
 # Port the sidecar listens on
 port: 8080
+pollInterval: 10s
+maxObservationAge: 30s
+server:
+  bindAddress: 0.0.0.0
+  readinessFailOnDegraded: false
+  # Reference existing Kubernetes Secrets; never place tokens in values.yaml.
+  metricsTokenSecret: ""
+  statusTokenSecret: ""
 # HTTP endpoint security: configure matching values in the mounted bridge config.
 # Kubernetes HTTP probes normally require a pod-reachable bind address.
 # Use Kubernetes Secrets for diagnostic bearer tokens, not values.yaml.
@@ -22,6 +30,7 @@ consumers: []
 # - name: order-processor
 #   stream: ORDERS
 #   consumer: order-processor
+#   heartbeatTimeout: 30s
 #   thresholds:
 #     maxLag: 1000
 #     maxAckPending: 500

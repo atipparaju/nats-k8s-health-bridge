@@ -7,9 +7,12 @@ metadata:
 data:
   config.yaml: |
     log_level: info
-    poll_interval: 10s
+    poll_interval: {{ .Values.pollInterval | quote }}
+    max_observation_age: {{ .Values.maxObservationAge | quote }}
     server:
       port: {{ .Values.port }}
+      bind_address: {{ .Values.server.bindAddress | quote }}
+      readiness_fail_on_degraded: {{ .Values.server.readinessFailOnDegraded }}
       shutdown_timeout: 10s
     nats:
       url: {{ .Values.nats.url }}
@@ -21,6 +24,7 @@ data:
       - name: {{ .name }}
         stream: {{ .stream }}
         consumer: {{ .consumer }}
+        heartbeat_timeout: {{ .heartbeatTimeout | default "0s" | quote }}
         thresholds:
           max_lag: {{ .thresholds.maxLag | default 0 }}
           max_ack_pending: {{ .thresholds.maxAckPending | default 0 }}
@@ -33,6 +37,17 @@ data:
 #   - name: nats-health-bridge
 #     image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
 #     args: ["--config", "/etc/nats-health-bridge/config.yaml"]
+#     env:
+#       - name: NKHB_SERVER_METRICS_TOKEN
+#         valueFrom:
+#           secretKeyRef:
+#             name: {{ .Values.server.metricsTokenSecret | default "replace-with-metrics-secret" }}
+#             key: token
+#       - name: NKHB_SERVER_STATUS_TOKEN
+#         valueFrom:
+#           secretKeyRef:
+#             name: {{ .Values.server.statusTokenSecret | default "replace-with-status-secret" }}
+#             key: token
 #     ports:
 #       - containerPort: {{ .Values.port }}
 #         name: health
