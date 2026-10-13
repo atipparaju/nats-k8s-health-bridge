@@ -18,7 +18,7 @@ type Registry struct {
 	ConsumerUp          *prometheus.GaugeVec
 	ConsumerLag         *prometheus.GaugeVec
 	ConsumerAckPending  *prometheus.GaugeVec
-	ConsumerRedelivered *prometheus.CounterVec
+	ConsumerRedelivered *prometheus.GaugeVec
 	NATSConnected       prometheus.Gauge
 	PrometheusRegistry  *prometheus.Registry
 }
@@ -51,11 +51,11 @@ func NewRegistry() *Registry {
 			Help:      "Number of messages delivered but not yet acknowledged.",
 		}, []string{"consumer_name", "stream", "consumer"}),
 
-		ConsumerRedelivered: prometheus.NewCounterVec(prometheus.CounterOpts{
+		ConsumerRedelivered: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Namespace: "nats",
 			Subsystem: "consumer",
-			Name:      "redelivered_total",
-			Help:      "Total number of redelivered messages (cumulative).",
+			Name:      "redelivered",
+			Help:      "Current number of messages pending redelivery as reported by JetStream; snapshot, not cumulative.",
 		}, []string{"consumer_name", "stream", "consumer"}),
 
 		NATSConnected: prometheus.NewGauge(prometheus.GaugeOpts{
