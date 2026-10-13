@@ -20,7 +20,7 @@ jobs:
       - name: Build local image for scanning
         run: docker build --pull --tag nats-k8s-health-bridge:security .
       - name: Report high and critical vulnerabilities
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           image-ref: nats-k8s-health-bridge:security
           format: table
@@ -29,7 +29,7 @@ jobs:
           ignore-unfixed: true
           exit-code: '0'
       - name: Block fixable critical vulnerabilities
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           image-ref: nats-k8s-health-bridge:security
           format: table
