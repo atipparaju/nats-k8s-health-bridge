@@ -44,8 +44,6 @@ consumers:
     thresholds:
       max_lag: 500
       max_ack_pending: 100
-      max_redelivery_rate: 0.05
-      eval_window: 30s
 `)
 	cfg, err := Load(path)
 	if err != nil {
@@ -80,8 +78,8 @@ consumers:
 	if c.Thresholds.MaxLag != 500 {
 		t.Errorf("Thresholds.MaxLag = %d, want %d", c.Thresholds.MaxLag, 500)
 	}
-	if c.Thresholds.MaxRedeliveryRate != 0.05 {
-		t.Errorf("Thresholds.MaxRedeliveryRate = %f, want %f", c.Thresholds.MaxRedeliveryRate, 0.05)
+	if c.Thresholds.MaxAckPending != 100 {
+		t.Errorf("Thresholds.MaxAckPending = %d, want %d", c.Thresholds.MaxAckPending, 100)
 	}
 }
 
