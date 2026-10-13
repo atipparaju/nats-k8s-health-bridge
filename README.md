@@ -169,6 +169,14 @@ The separate `.github/workflows/kind-smoke.yml` workflow creates a Kind cluster,
 
 Run locally with Kind, Docker, Helm, kubectl and curl: build `nats-k8s-health-bridge:e2e`, load it into a Kind cluster named `health-bridge-ci`, apply `test/e2e/kind-smoke.yaml`, then run `bash test/e2e/kind-smoke.sh`.
 
+### Container vulnerability scanning
+
+The `.github/workflows/container-security.yml` workflow builds the image from the PR or main branch with `docker build --pull`, scans OS and Go library vulnerabilities with Trivy, reports **HIGH and CRITICAL** findings, and blocks merges for **fixable CRITICAL** findings. Unfixed vulnerabilities are not blocking in this initial gate; they still require risk assessment. The job is separate from the image-publishing workflow and does not publish images or require registry credentials.
+
+**Production security checklist:** Use a supported, patched Go toolchain and base image; review HIGH findings and exceptions; restrict container capabilities and use `runAsNonRoot`, `readOnlyRootFilesystem`, `allowPrivilegeEscalation: false`, and `capabilities.drop: [ALL]` where supported; apply NetworkPolicies; keep credentials in Secrets; and use immutable image digests in production. A clean scan does not prove that the image or deployment is secure.
+
+This workflow is a vulnerability gate, **not** SBOM publication, signed provenance, SLSA attestation, or a comprehensive dependency-review policy. Those remain follow-up work.
+
 ## Building
 
 ```bash
