@@ -13,6 +13,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net"
+	"strings"
 	"net/http"
 	"time"
 
@@ -30,6 +32,7 @@ type HealthChecker interface {
 	IsNATSConnected() bool
 	IsReady() (bool, []string)
 	States() []*health.ConsumerState
+	RecordHeartbeat(name string) bool
 }
 
 // Server is the HTTP server exposing probe and metrics endpoints.
@@ -75,6 +78,19 @@ func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logge
 			"status":  "not_ready",
 			"reasons": failures,
 		})
+	})
+
+	// Application heartbeats are opt-in and must be restricted to trusted pod-local callers.
+	mux.HandleFunc("POST /heartbeat/{consumer}", func(w http.ResponseWriter, r *http.Request) {
+		if !isLoopback(r.RemoteAddr) {
+			http.Error(w, "heartbeat requires loopback caller", http.StatusForbidden)
+			return
+		}
+		if !checker.RecordHeartbeat(r.PathValue("consumer")) {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "unknown consumer"})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]string{"status": "accepted"})
 	})
 
 	// /metrics — Prometheus exposition
@@ -134,6 +150,14 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	defer cancel()
 	s.logger.Info("shutting down HTTP server")
 	return s.srv.Shutdown(shutdownCtx)
+}
+
+// isLoopback rejects non-local heartbeat requests. X-Forwarded-For is not trusted.
+func isLoopback(remote string) bool {
+	host, _, err := net.SplitHostPort(remote)
+	if err != nil { return false }
+	ip := net.ParseIP(strings.Trim(host, "[]"))
+	return ip != nil && ip.IsLoopback()
 }
 
 // writeJSON writes a JSON response with the given status code.
