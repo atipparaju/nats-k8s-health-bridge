@@ -12,7 +12,7 @@ Please be kind and courteous. There is no need to be mean or rude.
 
 ## Reporting
 
-Instances of unacceptable behavior may be reported to the project maintainer at **anantha.tipparaju@gmail.com**.
+Instances of unacceptable behavior may be reported to the project maintainer at **aktipparaju@outlook.com**.
 
 All complaints will be reviewed and investigated promptly and fairly.
 
