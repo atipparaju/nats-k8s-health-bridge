@@ -229,3 +229,27 @@ func TestLoad_InvalidBindAddress(t *testing.T) {
 	path := writeTestConfig(t, "server:\n  bind_address: invalid-host\nnats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
 	if _, err := Load(path); err == nil { t.Fatal("expected invalid bind address") }
 }
+
+// Security regression: Secret-backed env vars must be unmarshaled even when
+// token keys are absent from the YAML file.
+func TestLoad_EnvironmentOnlyDiagnosticTokens(t *testing.T) {
+	path := writeTestConfig(t, "nats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
+	t.Setenv("NKHB_SERVER_METRICS_TOKEN", "metrics-from-secret")
+	t.Setenv("NKHB_SERVER_STATUS_TOKEN", "status-from-secret")
+	cfg, err := Load(path)
+	if err != nil { t.Fatal(err) }
+	if cfg.Server.MetricsToken != "metrics-from-secret" || cfg.Server.StatusToken != "status-from-secret" {
+		t.Fatal("environment-only diagnostic tokens were not loaded")
+	}
+}
+
+func TestLoad_DiagnosticTokensEnvironmentOverridesYAML(t *testing.T) {
+	path := writeTestConfig(t, "server:\n  metrics_token: yaml-metrics\n  status_token: yaml-status\nnats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
+	t.Setenv("NKHB_SERVER_METRICS_TOKEN", "env-metrics")
+	t.Setenv("NKHB_SERVER_STATUS_TOKEN", "env-status")
+	cfg, err := Load(path)
+	if err != nil { t.Fatal(err) }
+	if cfg.Server.MetricsToken != "env-metrics" || cfg.Server.StatusToken != "env-status" {
+		t.Fatal("environment tokens must override YAML tokens")
+	}
+}
