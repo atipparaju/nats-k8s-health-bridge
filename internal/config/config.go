@@ -116,6 +116,15 @@ func Load(cfgFile string) (*Config, error) {
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
+	// Viper AutomaticEnv resolves lookups but does not enumerate environment-only
+	// keys for Unmarshal. Explicitly register security-sensitive tokens so
+	// Kubernetes Secret-backed variables cannot silently leave endpoints open.
+	for _, key := range []string{"server.metrics_token", "server.status_token"} {
+		if err := v.BindEnv(key); err != nil {
+			return nil, fmt.Errorf("binding environment key %s: %w", key, err)
+		}
+	}
+
 	var cfg Config
 	if err := v.Unmarshal(&cfg); err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
