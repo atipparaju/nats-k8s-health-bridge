@@ -189,6 +189,10 @@ docker buildx build --platform linux/amd64,linux/arm64 --tag example/nats-k8s-he
 
 The build command validates compilation for each target but does not by itself prove successful execution on both architectures. Validate the published image manifest and run an arm64 smoke test before declaring multi-platform support production-ready.
 
+## Local Kubernetes validation
+
+See [Local Kubernetes Validation Report](docs/local-kubernetes-validation.md) for the portable Windows PowerShell and Linux Bash lab procedure, observed functional and security test results, authentication regression analysis, rolling-update findings, and outstanding release-readiness work. The report uses generic resource names and does not disclose workstation or cluster-specific identifiers.
+
 ## Building
 
 ```bash
