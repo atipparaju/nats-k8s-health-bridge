@@ -143,6 +143,9 @@ For rate-based alerting, instrument message delivery attempts and acknowledgment
 
 ### Securing HTTP endpoints
 
+**Security fix:** `NKHB_SERVER_METRICS_TOKEN` and `NKHB_SERVER_STATUS_TOKEN` are explicitly registered with Viper so Kubernetes Secret-injected, environment-only token values are included during configuration unmarshaling. Earlier builds could silently leave `/metrics` and `/status` unauthenticated despite those environment variables being present. Rebuild/redeploy the bridge after this fix and verify that requests without or with invalid bearer tokens return HTTP 401. Until verified, restrict diagnostic endpoints at the network level.
+
+
 The bridge now supports `server.bind_address` and optional bearer-token authentication for `/metrics` and `/status`. Configure `NKHB_SERVER_METRICS_TOKEN` and `NKHB_SERVER_STATUS_TOKEN` from Kubernetes Secrets; do not commit credentials to ConfigMaps or repository files. Supply `Authorization: Bearer <token>` from your monitoring client. `/healthz` and `/readyz` remain unauthenticated for Kubernetes probes. The heartbeat endpoint remains restricted to loopback callers; pod-local containers are trusted by this mechanism, not cryptographically authenticated.
 
 **Deployment:** `0.0.0.0` remains the default for compatibility and Kubernetes HTTP probes, which normally contact the pod IP. Binding to `127.0.0.1` can prevent kubelet HTTP probes from reaching the container. Use Kubernetes NetworkPolicies, avoid public Services/Ingress, and restrict access to the monitoring namespace. NetworkPolicies do not reliably isolate containers within the same pod. Tokens are optional and not a substitute for TLS or network isolation; use TLS termination through a trusted proxy if traffic leaves the pod. Prometheus scraping needs a matching authorization configuration when metrics authentication is enabled.
