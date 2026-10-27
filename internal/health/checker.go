@@ -57,6 +57,7 @@ type Checker struct {
 	client           NATSClient
 	cfg              *config.Config
 	reg              *metrics.Registry
+	evaluator        ConsumerEvaluator
 	logger           *slog.Logger
 	mu               sync.RWMutex
 	states           map[string]*ConsumerState
@@ -77,6 +78,7 @@ func NewChecker(client NATSClient, cfg *config.Config, reg *metrics.Registry, lo
 		client:            client,
 		cfg:               cfg,
 		reg:               reg,
+		evaluator:         LegacyEvaluator{},
 		logger:            logger,
 		states:            states,
 	}
@@ -139,7 +141,7 @@ func (c *Checker) pollOne(ctx context.Context, consumerCfg config.ConsumerConfig
 	c.reg.ConsumerRedelivered.WithLabelValues(consumerCfg.Name, consumerCfg.Stream, consumerCfg.Consumer).Set(float64(info.NumRedelivered))
 
 	// Evaluate thresholds
-	reasons := c.evaluate(info, consumerCfg.Thresholds)
+	reasons := c.evaluator.Evaluate(info, consumerCfg.Thresholds)
 	if len(reasons) == 0 {
 		state.Status = StatusHealthy
 		state.Reasons = nil
@@ -162,17 +164,6 @@ func (c *Checker) pollOne(ctx context.Context, consumerCfg config.ConsumerConfig
 		"lag", info.NumPending,
 		"ack_pending", info.NumAckPending,
 	)
-}
-
-func (c *Checker) evaluate(info *natsclient.ConsumerInfo, t config.Thresholds) []string {
-	var reasons []string
-	if t.MaxLag > 0 && info.NumPending > t.MaxLag {
-		reasons = append(reasons, fmt.Sprintf("lag %d exceeds max_lag %d", info.NumPending, t.MaxLag))
-	}
-	if t.MaxAckPending > 0 && uint64(info.NumAckPending) > t.MaxAckPending {
-		reasons = append(reasons, fmt.Sprintf("ack_pending %d exceeds max_ack_pending %d", info.NumAckPending, t.MaxAckPending))
-	}
-	return reasons
 }
 
 // IsNATSConnected reports upstream NATS connectivity for readiness and diagnostics.
