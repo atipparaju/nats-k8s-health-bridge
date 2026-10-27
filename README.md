@@ -189,6 +189,10 @@ docker buildx build --platform linux/amd64,linux/arm64 --tag example/nats-k8s-he
 
 The build command validates compilation for each target but does not by itself prove successful execution on both architectures. Validate the published image manifest and run an arm64 smoke test before declaring multi-platform support production-ready.
 
+## Health evaluation architecture
+
+The consumer threshold evaluator is isolated behind a `ConsumerEvaluator` interface; the current `LegacyEvaluator` remains the default, preserving existing behavior. See [jsm.go evaluator compatibility study](docs/jsm-evaluator-compatibility.md) for the upstream NATS monitor parity matrix and proposed adapter design. The upstream library is **not yet integrated**.
+
 ## Building
 
 ```bash
