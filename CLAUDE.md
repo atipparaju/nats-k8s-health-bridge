@@ -55,7 +55,7 @@ already exist; do not claim uniqueness or NATS/CNCF endorsement without independ
 
 ---
 
-## Complete File Tree
+## Representative File Tree
 
 ```
 nats-k8s-health-bridge/
@@ -97,6 +97,8 @@ nats-k8s-health-bridge/
 ```
 
 ---
+
+For the complete current tree, inspect the repository. The listing below highlights core source files and does not enumerate all tests and documentation.
 
 ## Dependency Versions (pinned in go.mod)
 
