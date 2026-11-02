@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fail readiness on stale consumer observations rather than reusing outdated successful poll results; report stale status in `/status`.
 
 ### Added
+- Cross-platform local Kubernetes validation report covering functional, resilience, heartbeat, security and rolling-update testing.
 - Container image vulnerability CI with Trivy: report HIGH/CRITICAL and block fixable CRITICAL findings.
 - Kind-based Kubernetes smoke CI for Helm rendering, probe behavior, and upstream NATS outage resilience.
 - Configurable HTTP bind address and optional bearer-token protection for `/metrics` and `/status`.
