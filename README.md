@@ -119,6 +119,10 @@ Configuration is loaded from a YAML file with **environment variable overrides**
 
 See [`config.yaml`](config.yaml) for a fully annotated example.
 
+### Consumer-info retries
+
+The bridge retries transient JetStream consumer-info errors (up to two retries with backoff), but returns immediately on typed missing-stream, missing-consumer, authorization and cancellation errors. The next periodic poll still rechecks missing resources, so a subsequently created consumer can recover without restarting the bridge. Per-request timeouts remain retryable when the parent cycle context is still valid. This avoids unnecessary delays for permanent errors.
+
 ### Observation freshness
 
 The bridge tracks both `last_checked` (most recent poll attempt) and `last_successful` (most recent successful JetStream consumer-info response). If a consumer has not been observed successfully within `max_observation_age` (default `30s`, with a `10s` poll interval), `/readyz` returns `503` even if the last recorded state was healthy. `/status` exposes an effective `unknown` state and a stale reason, without modifying the stored last observation. Set the timeout above the poll interval with sufficient margin for retries and network latency. A zero value disables freshness enforcement only for programmatically constructed configurations; file-based configurations default to `30s`.
