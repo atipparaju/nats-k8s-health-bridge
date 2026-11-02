@@ -13,6 +13,7 @@ data:
       port: {{ .Values.port }}
       bind_address: {{ .Values.server.bindAddress | quote }}
       readiness_fail_on_degraded: {{ .Values.server.readinessFailOnDegraded }}
+      allow_unauthenticated_diagnostics: {{ .Values.server.allowUnauthenticatedDiagnostics }}
       shutdown_timeout: 10s
     nats:
       url: {{ .Values.nats.url }}
