@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the misleading redelivery-rate health threshold, which inferred delivery rates from non-monotonic JetStream consumer snapshots.
 
 ### Changed
+- Pin NATS development/test images and a supported Go builder/CI toolchain to specific version tags; digest pinning remains a release follow-up.
 - Extracted consumer threshold evaluation behind an interface while preserving existing strict-threshold semantics; added upstream jsm.go compatibility design documentation.
 - Removed `max_redelivery_rate` and `eval_window` configuration keys; use application-level delivery/ack instrumentation for rate-based monitoring.
 
