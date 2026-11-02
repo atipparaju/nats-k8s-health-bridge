@@ -288,7 +288,7 @@ make docker-push
 
 ```bash
 # Start NATS with JetStream for integration tests
-docker run -d --name nats-test -p 4222:4222 nats:latest -js
+docker run -d --name nats-test -p 4222:4222 nats:2.15.1-alpine3.22 -js
 
 # Run tests
 go test -race -count=1 ./...
@@ -311,7 +311,7 @@ Unit tests should be placed alongside source files: `internal/health/checker_tes
 
 ```bash
 # Start NATS with JetStream
-docker run -d --name nats-dev -p 4222:4222 -p 8222:8222 nats:latest -js
+docker run -d --name nats-dev -p 4222:4222 -p 8222:8222 nats:2.15.1-alpine3.22 -js
 
 # Create a test stream and consumer (requires nats CLI)
 nats stream add ORDERS --subjects "orders.>" --storage memory --retention limits --max-msgs -1 --max-bytes -1 --max-age -1 --replicas 1 --defaults
