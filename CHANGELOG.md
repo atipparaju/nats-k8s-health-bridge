@@ -8,10 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Reconciled developer architecture documentation, current evaluator behavior, health semantics and redelivery metric names.
 - Register environment-only diagnostic bearer-token keys explicitly in Viper to prevent silently unauthenticated `/metrics` and `/status` endpoints when tokens are injected from Kubernetes Secrets.
 - Correct Docker multi-platform builds by compiling Go binaries for BuildKit target architecture.
 - Align Helm chart configuration with observation freshness, readiness policy, heartbeat and diagnostic endpoint settings.
 - Fail readiness on stale consumer observations rather than reusing outdated successful poll results; report stale status in `/status`.
+- Removed the misleading redelivery-rate health threshold, which inferred delivery rates from non-monotonic JetStream consumer snapshots.
 
 ### Added
 - Cross-platform local Kubernetes validation report covering functional, resilience, heartbeat, security and rolling-update testing.
@@ -20,8 +22,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable HTTP bind address and optional bearer-token protection for `/metrics` and `/status`.
 - Optional per-consumer application processing heartbeat (`heartbeat_timeout`) and loopback-only `POST /heartbeat/{consumer}` endpoint to detect stalled consumers.
 - Configurable `max_observation_age` (default `30s`) and `last_successful` consumer timestamp.
-
-- Removed the misleading redelivery-rate health threshold, which inferred delivery rates from non-monotonic JetStream consumer snapshots.
 
 ### Changed
 - Extracted consumer threshold evaluation behind an interface while preserving existing strict-threshold semantics; added upstream jsm.go compatibility design documentation.
