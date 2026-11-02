@@ -23,23 +23,9 @@ NATS JetStream consumers running inside Kubernetes pods have no native way to si
 
 ### Run locally with Docker
 
-```bash
-# Start a local NATS server with JetStream enabled
-docker run -d -p 4222:4222 -p 8222:8222 nats:latest -js
+See the [portable Docker first-run guide](docs/docker-quickstart.md) for tested steps on **Windows PowerShell and Linux Bash**. It creates a disposable NATS stream and consumer, builds the bridge locally rather than pulling a potentially unavailable private GHCR package, uses a dedicated Docker network, and injects temporary diagnostic tokens safely.
 
-# Run the sidecar
-docker run --rm \
-  -e NKHB_NATS_URL=nats://host.docker.internal:4222 \
-  -e NKHB_LOG_LEVEL=debug \
-  -p 8080:8080 \
-  ghcr.io/atipparaju/nats-k8s-health-bridge:latest \
-  --config /etc/nats-k8s-health-bridge/config.yaml
-
-# Check health
-curl http://localhost:8080/healthz
-curl http://localhost:8080/readyz
-curl http://localhost:8080/status
-```
+The corresponding configuration is [examples/docker/bridge-config.yaml](examples/docker/bridge-config.yaml). Do not rely on an unversioned GHCR `:latest` image or the multi-consumer generic configuration for first-run testing.
 
 ### Kubernetes sidecar injection
 
