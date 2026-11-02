@@ -139,7 +139,7 @@ Set `server.readiness_fail_on_degraded: true` only if your deployment explicitly
 
 JetStream consumer-info `num_redelivered` is a point-in-time count, not a monotonic lifetime counter. The former `max_redelivery_rate` threshold was calculated from changes in `num_redelivered` and `num_ack_pending`; these snapshots cannot provide a reliable delivery denominator or event rate. **That threshold has been removed** rather than producing misleading health decisions. `eval_window` is also removed because it was only used by this calculation.
 
-For rate-based alerting, instrument message delivery attempts and acknowledgments in the consumer application or another reliable event source. Derive redelivery ratios from observed events over an explicit window. `/status` still includes the current `num_redelivered` snapshot; the metric fix is handled separately in the redelivery gauge PR. Remove `max_redelivery_rate` and `eval_window` from existing configurations before upgrading.
+For rate-based alerting, instrument message delivery attempts and acknowledgments in the consumer application or another reliable event source. Derive redelivery ratios from observed events over an explicit window. `/status` still includes the current `num_redelivered` snapshot; the current `nats_consumer_redelivered` Prometheus metric is a gauge, not a cumulative counter. Remove `max_redelivery_rate` and `eval_window` from existing configurations before upgrading.
 
 ### Securing HTTP endpoints
 
@@ -195,6 +195,10 @@ See [Local Kubernetes Validation Report](docs/local-kubernetes-validation.md) fo
 ## Health evaluation architecture
 
 The consumer threshold evaluator is isolated behind a `ConsumerEvaluator` interface; the current `LegacyEvaluator` remains the default, preserving existing behavior. See [jsm.go evaluator compatibility study](docs/jsm-evaluator-compatibility.md) for the upstream NATS monitor parity matrix and proposed adapter design. The upstream library is **not yet integrated**.
+
+### Maintainer architecture reference
+
+The [developer architecture guide](CLAUDE.md) reflects current readiness, redelivery and evaluator semantics. For an upstream `jsm.go` comparison, see [evaluator compatibility](docs/jsm-evaluator-compatibility.md).
 
 ## Building
 
