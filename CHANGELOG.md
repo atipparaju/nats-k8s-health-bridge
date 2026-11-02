@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Skip retry delays for permanent JetStream missing-stream, missing-consumer and authorization errors while retaining retries for transient failures.
 - Register environment-only diagnostic bearer-token keys explicitly in Viper to prevent silently unauthenticated `/metrics` and `/status` endpoints when tokens are injected from Kubernetes Secrets.
 - Correct Docker multi-platform builds by compiling Go binaries for BuildKit target architecture.
 - Align Helm chart configuration with observation freshness, readiness policy, heartbeat and diagnostic endpoint settings.
