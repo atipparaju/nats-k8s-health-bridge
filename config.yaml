@@ -9,6 +9,8 @@ log_level: info
 
 # How often to poll JetStream consumer info
 poll_interval: 10s
+# Maximum wall-clock duration for a polling cycle (up to 4 concurrent consumers).
+poll_timeout: 8s
 # Maximum age of the last successful consumer-info poll before readiness fails.
 # Must exceed poll_interval. Use a margin for retries and transient latency.
 max_observation_age: 30s
