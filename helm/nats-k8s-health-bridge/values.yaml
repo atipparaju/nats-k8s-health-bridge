@@ -10,6 +10,7 @@ maxObservationAge: 30s
 server:
   bindAddress: 0.0.0.0
   readinessFailOnDegraded: false
+  allowUnauthenticatedDiagnostics: false # Only enable in isolated development environments
   # Reference existing Kubernetes Secrets; never place tokens in values.yaml.
   metricsTokenSecret: ""
   statusTokenSecret: ""
