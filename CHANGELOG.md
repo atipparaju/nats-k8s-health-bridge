@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed the misleading redelivery-rate health threshold, which inferred delivery rates from non-monotonic JetStream consumer snapshots.
 
 ### Changed
+- Diagnostic endpoints now fail closed when tokens are omitted; insecure anonymous access requires an explicit test-only opt-in.
 - Extracted consumer threshold evaluation behind an interface while preserving existing strict-threshold semantics; added upstream jsm.go compatibility design documentation.
 - Removed `max_redelivery_rate` and `eval_window` configuration keys; use application-level delivery/ack instrumentation for rate-based monitoring.
 

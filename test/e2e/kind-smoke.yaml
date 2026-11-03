@@ -41,6 +41,8 @@ data:
     server:
       port: 8080
       bind_address: 0.0.0.0
+      # Test fixture only: production diagnostics require Secret-backed tokens.
+      allow_unauthenticated_diagnostics: true
       shutdown_timeout: 5s
     nats:
       url: nats://nats:4222
