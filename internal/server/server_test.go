@@ -60,6 +60,7 @@ func setupServer(checker HealthChecker) http.Handler {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
 			Port:            8080,
+			AllowUnauthenticatedDiagnostics: true, // test-only fixture
 			ShutdownTimeout: 10 * time.Second,
 		},
 	}
@@ -290,4 +291,18 @@ func TestProtectedDiagnosticEndpoints(t *testing.T) {
 		if rr.Code != tt.want { t.Errorf("%s token=%q status=%d want=%d", tt.path, tt.token, rr.Code, tt.want) }
 	}
 	if srv.srv.Addr != "127.0.0.1:8080" { t.Errorf("listen address=%s", srv.srv.Addr) }
+}
+
+func TestDiagnosticEndpointsFailClosedByDefault(t *testing.T) {
+	cfg := &config.Config{Server: config.ServerConfig{Port:8080, BindAddress:"0.0.0.0"}}
+	reg := metrics.NewRegistry()
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	check := &mockHealthChecker{live:true, connected:true, ready:true}
+	handler := New(cfg, check, reg, logger).srv.Handler
+	for _, path := range []string{"/status", "/metrics"} {
+		rr := makeRequest(t, handler, "GET", path)
+		if rr.Code != http.StatusUnauthorized { t.Errorf("%s status=%d, want 401",path,rr.Code) }
+	}
+	if rr := makeRequest(t, handler, "GET", "/healthz"); rr.Code != http.StatusOK { t.Fatalf("liveness=%d",rr.Code) }
+	if rr := makeRequest(t, handler, "GET", "/readyz"); rr.Code != http.StatusOK { t.Fatalf("readiness=%d",rr.Code) }
 }

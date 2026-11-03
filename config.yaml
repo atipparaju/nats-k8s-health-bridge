@@ -20,6 +20,9 @@ server:
   port: 8080
   # Bind to 127.0.0.1 for pod-local access; Kubernetes HTTP probes need pod-reachable address.
   bind_address: 0.0.0.0
+  # Fail closed for /status and /metrics when no token is configured.
+  # NEVER enable anonymous diagnostics on exposed production workloads.
+  allow_unauthenticated_diagnostics: false
   # Optional bearer tokens for diagnostics; inject through secrets/env, never commit real values.
   # metrics_token: ""
   # status_token: ""

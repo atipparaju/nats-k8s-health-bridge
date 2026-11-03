@@ -39,6 +39,7 @@ type ServerConfig struct {
 	BindAddress string `mapstructure:"bind_address"`
 	MetricsToken string `mapstructure:"metrics_token"`
 	StatusToken string `mapstructure:"status_token"`
+	AllowUnauthenticatedDiagnostics bool `mapstructure:"allow_unauthenticated_diagnostics"`
 	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
 }
 
@@ -84,6 +85,7 @@ func Load(cfgFile string) (*Config, error) {
 	v.SetDefault("server.port", 8080)
 	v.SetDefault("server.bind_address", "0.0.0.0")
 	v.SetDefault("server.readiness_fail_on_degraded", false)
+	v.SetDefault("server.allow_unauthenticated_diagnostics", false)
 	v.SetDefault("server.shutdown_timeout", "10s")
 	v.SetDefault("nats.url", "nats://localhost:4222")
 	v.SetDefault("nats.connect_timeout", "5s")
