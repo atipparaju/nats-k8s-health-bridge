@@ -8,6 +8,7 @@ data:
   config.yaml: |
     log_level: info
     poll_interval: {{ .Values.pollInterval | quote }}
+    poll_timeout: {{ .Values.pollTimeout | quote }}
     max_observation_age: {{ .Values.maxObservationAge | quote }}
     server:
       port: {{ .Values.port }}

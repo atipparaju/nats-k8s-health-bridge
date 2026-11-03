@@ -99,6 +99,7 @@ Configuration is loaded from a YAML file with **environment variable overrides**
 |---|---|---|---|
 | `NKHB_LOG_LEVEL` | `log_level` | `info` | `debug`, `info`, `warn`, `error` |
 | `NKHB_POLL_INTERVAL` | `poll_interval` | `10s` | How often to poll JetStream |
+| `NKHB_POLL_TIMEOUT` | `poll_timeout` | `8s` | Max duration of one polling cycle; checks run with up to four workers |
 | `NKHB_MAX_OBSERVATION_AGE` | `max_observation_age` | `30s` | Maximum age of last successful consumer observation; must exceed poll interval |
 | `NKHB_SERVER_PORT` | `server.port` | `8080` | HTTP server port |
 | `NKHB_SERVER_BIND_ADDRESS` | `server.bind_address` | `0.0.0.0` | IP address on which the HTTP server listens |
@@ -123,6 +124,10 @@ See [`config.yaml`](config.yaml) for a fully annotated example.
 
 The bridge retries transient JetStream consumer-info errors (up to two retries with backoff), but returns immediately on typed missing-stream, missing-consumer, authorization and cancellation errors. The next periodic poll still rechecks missing resources, so a subsequently created consumer can recover without restarting the bridge. Per-request timeouts remain retryable when the parent cycle context is still valid. This avoids unnecessary delays for permanent errors.
 
+
+### Bounded consumer polling
+
+Consumer checks run through a fixed pool of at most four workers per cycle. A shared `poll_timeout` (default `8s`) cancels a slow batch without waiting for every configured consumer's individual retry sequence. A cancelled/not-yet-observed consumer remains stale or unknown, rather than being reported healthy. Set the timeout to fit request latency, retry behavior, and `max_observation_age`. The loop waits for workers to stop before starting the next cycle; it never overlaps cycles. This does not change readiness policy or how consumer lag thresholds are evaluated.
 
 ### Observation freshness
 
@@ -167,7 +172,7 @@ The bridge now supports `server.bind_address` and optional bearer-token authenti
 
 ### Helm configuration parity
 
-The Helm chart now exposes `pollInterval`, `maxObservationAge`, `server.bindAddress`, `server.readinessFailOnDegraded`, and per-consumer `heartbeatTimeout`. Optional diagnostic bearer tokens must come from Kubernetes Secrets. The chart generates a ConfigMap and a commented sidecar example, **not a ready-to-run Deployment**; uncomment and adapt the environment-variable Secret references for your workload. Do not put bearer tokens in Helm values or ConfigMaps. Validate chart rendering with `helm lint helm/nats-k8s-health-bridge` and `helm template health-bridge helm/nats-k8s-health-bridge` before deployment.
+The Helm chart now exposes `pollInterval`, `pollTimeout`, `maxObservationAge`, `server.bindAddress`, `server.readinessFailOnDegraded`, and per-consumer `heartbeatTimeout`. Optional diagnostic bearer tokens must come from Kubernetes Secrets. The chart generates a ConfigMap and a commented sidecar example, **not a ready-to-run Deployment**; uncomment and adapt the environment-variable Secret references for your workload. Do not put bearer tokens in Helm values or ConfigMaps. Validate chart rendering with `helm lint helm/nats-k8s-health-bridge` and `helm template health-bridge helm/nats-k8s-health-bridge` before deployment.
 
 ### Kubernetes CI smoke test
 
