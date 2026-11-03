@@ -233,4 +233,4 @@ Apache 2.0 — see [LICENSE](LICENSE).
 
 ---
 
-*Independent open-source project developed for [NATS](https://nats.io) (a [CNCF Graduated project](https://www.cncf.io/projects/nats/)) and [Kubernetes](https://kubernetes.io) (CNCF Graduated). This bridge is not an official CNCF or NATS project and does not claim their endorsement.*
+*Independently maintained project developed for [NATS](https://nats.io) (a [CNCF Graduated project](https://www.cncf.io/projects/nats/)) and [Kubernetes](https://kubernetes.io) (CNCF Graduated). This bridge is not an official CNCF or NATS project and does not claim their endorsement.*
