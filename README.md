@@ -3,7 +3,9 @@
 > Kubernetes-native liveness/readiness probe bridge for NATS JetStream consumers.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![CNCF Ecosystem](https://img.shields.io/badge/CNCF-NATS%20Incubating-blue)](https://www.cncf.io/projects/nats/)
+[![NATS project maturity](https://img.shields.io/badge/NATS-CNCF%20Graduated-blue)](https://www.cncf.io/projects/nats/)
+
+NATS graduated in the CNCF on **November 2, 2026**. This maturity designation refers to NATS itself, not to this independently maintained bridge. See the [release-readiness checklist](docs/release-readiness-checklist.md) before considering public distribution.
 
 ## What it does
 
@@ -231,4 +233,4 @@ Apache 2.0 — see [LICENSE](LICENSE).
 
 ---
 
-*Part of the [CNCF](https://cncf.io) ecosystem — built to complement [NATS](https://nats.io) (CNCF Incubating) and [Kubernetes](https://kubernetes.io) (CNCF Graduated).*
+*Independently maintained project developed for [NATS](https://nats.io) (a [CNCF Graduated project](https://www.cncf.io/projects/nats/)) and [Kubernetes](https://kubernetes.io) (CNCF Graduated). This bridge is not an official CNCF or NATS project and does not claim their endorsement.*
