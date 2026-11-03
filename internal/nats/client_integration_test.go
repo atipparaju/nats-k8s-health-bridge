@@ -162,8 +162,12 @@ func TestClient_Integration_GetConsumerInfo_NotFound(t *testing.T) {
 	defer client.Close()
 
 	ctx := context.Background()
+	started := time.Now()
 	_, err = client.GetConsumerInfo(ctx, "INTEGRATION_TEST", "nonexistent-consumer")
 	if err == nil {
 		t.Error("expected error for nonexistent consumer")
+	}
+	if elapsed := time.Since(started); elapsed >= 1900*time.Millisecond {
+		t.Errorf("missing consumer should fail without backoff retries; elapsed=%v", elapsed)
 	}
 }
