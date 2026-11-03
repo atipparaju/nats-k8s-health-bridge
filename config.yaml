@@ -36,12 +36,18 @@ nats:
   # NATS server URL (supports nats://, tls://, ws://)
   url: nats://localhost:4222
 
+  # File paths can also be set with NKHB_NATS_* environment variables.
+  # Environment values override YAML, including when the key is absent here.
+  # Mount Secret-backed files inside the container; never put key contents here.
+  # Choose credentials_file OR nkey_file, never both.
   # Optional: path to NATS credentials file (.creds) for NGS/accounts auth
   # credentials_file: /etc/nats/user.creds
 
   # Optional: path to NKey seed file for NKey auth
   # nkey_file: /etc/nats/user.nkey
 
+  # Client TLS certificate and key must be configured together.
+  # A CA file alone may be set to verify the NATS server.
   # Optional: mTLS client certificate and key
   # tls_cert: /etc/nats/tls.crt
   # tls_key:  /etc/nats/tls.key

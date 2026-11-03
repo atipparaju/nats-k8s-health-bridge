@@ -120,10 +120,18 @@ func Load(cfgFile string) (*Config, error) {
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
-	// Viper AutomaticEnv resolves lookups but does not enumerate environment-only
-	// keys for Unmarshal. Explicitly register security-sensitive tokens so
-	// Kubernetes Secret-backed variables cannot silently leave endpoints open.
-	for _, key := range []string{"server.metrics_token", "server.status_token"} {
+	// AutomaticEnv can resolve individual lookups without exposing environment-only
+	// keys to Unmarshal. Explicitly register security-sensitive, optional values
+	// so a Secret-backed NATS identity or TLS setting is never silently ignored.
+	for _, key := range []string{
+		"server.metrics_token",
+		"server.status_token",
+		"nats.credentials_file",
+		"nats.nkey_file",
+		"nats.tls_cert",
+		"nats.tls_key",
+		"nats.tls_ca",
+	} {
 		if err := v.BindEnv(key); err != nil {
 			return nil, fmt.Errorf("binding environment key %s: %w", key, err)
 		}
@@ -148,6 +156,13 @@ func validate(cfg *Config) error {
 	if cfg.MaxObservationAge > 0 && cfg.MaxObservationAge <= cfg.PollInterval { return fmt.Errorf("max_observation_age must exceed poll_interval") }
 	if cfg.NATS.URL == "" {
 		return fmt.Errorf("nats.url is required")
+	}
+	// Explicitly reject combinations the NATS client would otherwise ignore.
+	if cfg.NATS.CredentialsFile != "" && cfg.NATS.NKeyFile != "" {
+		return fmt.Errorf("nats.credentials_file and nats.nkey_file are mutually exclusive")
+	}
+	if (cfg.NATS.TLSCert == "") != (cfg.NATS.TLSKey == "") {
+		return fmt.Errorf("nats.tls_cert and nats.tls_key must be configured together")
 	}
 	if cfg.Server.BindAddress == "" { return fmt.Errorf("server.bind_address must not be empty") }
 	if ip := net.ParseIP(cfg.Server.BindAddress); ip == nil { return fmt.Errorf("server.bind_address must be an IP address") }

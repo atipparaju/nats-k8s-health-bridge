@@ -150,6 +150,8 @@ nc.IsConnected() // bool — NATS availability contributes to /readyz, not /heal
 **Env var prefix:** `NKHB_`
 **Key mapping:** dots → underscores (e.g. `nats.url` → `NKHB_NATS_URL`)
 
+**Environment-only NATS Secret configuration:** Viper `AutomaticEnv` does not reliably include keys absent from YAML during `Unmarshal`. Explicit `BindEnv` registration is required for `nats.credentials_file`, `nats.nkey_file`, `nats.tls_cert`, `nats.tls_key`, and `nats.tls_ca`, as well as the diagnostic bearer tokens. The two NATS identity file settings are mutually exclusive; the client certificate/key must be set together; a standalone CA file is valid. Keep credential contents out of logs and source files.
+
 Config is loaded in `internal/config/config.go` via viper:
 1. Reads `config.yaml` (or path from `--config` flag)
 2. Also checks `/etc/nats-k8s-health-bridge/config.yaml`

@@ -14,6 +14,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -169,5 +170,35 @@ func TestClient_Integration_GetConsumerInfo_NotFound(t *testing.T) {
 	}
 	if elapsed := time.Since(started); elapsed >= 1900*time.Millisecond {
 		t.Errorf("missing consumer should fail without backoff retries; elapsed=%v", elapsed)
+	}
+}
+
+ // Test an actual NATS connection rather than only checking decoded fields:
+ // missing Secret-mounted credentials must not be silently ignored in favor
+ // of the anonymous server used by the integration fixture.
+func TestClient_Integration_EnvironmentOnlyMissingCredentialsFailsClosed(t *testing.T) {
+	_, cleanup := setupTestStream(t)
+	defer cleanup()
+
+	cfgPath := filepath.Join(t.TempDir(), "bridge.yaml")
+	yaml := "nats:\n  url: " + natsURL() + "\nconsumers:\n  - stream: S\n    consumer: C\n"
+	if err := os.WriteFile(cfgPath, []byte(yaml), 0600); err != nil {
+		t.Fatal(err)
+	}
+	missing := filepath.Join(t.TempDir(), "missing-user.creds")
+	t.Setenv("NKHB_NATS_CREDENTIALS_FILE", missing)
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.NATS.CredentialsFile != missing {
+		t.Fatal("expected environment-only credentials to be passed into the NATS connection")
+	}
+
+	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
+	client, err := New(cfg, logger)
+	if err == nil {
+		client.Close()
+		t.Fatal("connection should not silently succeed using anonymous access when credentials path is invalid")
 	}
 }

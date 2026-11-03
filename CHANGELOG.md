@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Explicitly bind environment-only NATS credentials/NKey and TLS file-path configuration; reject mutually exclusive auth files and incomplete client certificate pairs before connecting.
 - Reconciled maintainer documentation with actual health, redelivery, authorization and evaluator behavior.
 - Removed the misleading redelivery-rate health threshold, which inferred delivery rates from non-monotonic JetStream consumer snapshots.
 - Bound JetStream polling with a four-worker pool and configurable cycle timeout to prevent slow consumers from starving other observations.
