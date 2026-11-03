@@ -25,7 +25,7 @@ NATS JetStream consumers running inside Kubernetes pods have no native way to si
 
 ```bash
 # Start a local NATS server with JetStream enabled
-docker run -d -p 4222:4222 -p 8222:8222 nats:latest -js
+docker run -d -p 4222:4222 -p 8222:8222 nats:2.15.1-alpine3.22 -js
 
 # Run the sidecar
 docker run --rm \
@@ -192,6 +192,10 @@ The `.github/workflows/container-security.yml` workflow builds the image from th
 **Production security checklist:** Use a supported, patched Go toolchain and base image; review HIGH findings and exceptions; restrict container capabilities and use `runAsNonRoot`, `readOnlyRootFilesystem`, `allowPrivilegeEscalation: false`, and `capabilities.drop: [ALL]` where supported; apply NetworkPolicies; keep credentials in Secrets; and use immutable image digests in production. A clean scan does not prove that the image or deployment is secure.
 
 This workflow is a vulnerability gate, **not** SBOM publication, signed provenance, SLSA attestation, or a comprehensive dependency-review policy. Those remain follow-up work.
+### Reproducible container toolchains
+
+Development and CI examples use the NATS `2.15.1-alpine3.22` image instead of a floating `latest` tag; the builder uses Go `1.26.10-alpine3.23` (a supported Go toolchain) even though the module's minimum Go version is lower. These are specific version tags, not immutable digests: production builds should pin reviewed multi-architecture image digests and record their source. Validate toolchain compatibility and renovate version pins explicitly.
+
 ### Multi-platform container builds
 
 The Dockerfile uses BuildKit `TARGETOS` and `TARGETARCH` to cross-compile for the requested image platform rather than always producing an amd64 executable. Build and verify both architectures before release:

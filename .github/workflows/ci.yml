@@ -28,7 +28,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
+          go-version: '1.26.10'
           cache: true
 
       - name: Tidy
@@ -38,9 +38,9 @@ jobs:
         run: go vet ./...
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@d583c34f0599d37dbac4a198b9c83201be380893 # v9.3.0
         with:
-          version: latest
+          version: v2.15.0
 
       - name: Test with coverage
         run: go test -race -count=1 -timeout=60s -coverprofile=coverage.out -covermode=atomic ./...
@@ -61,12 +61,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
+          go-version: '1.26.10'
           cache: true
 
       - name: Start NATS with JetStream
         run: |
-          docker run -d --name nats-test -p 4222:4222 nats:latest -js
+          docker run -d --name nats-test -p 4222:4222 nats:2.15.1-alpine3.22 -js
           sleep 2
           docker logs nats-test
 
