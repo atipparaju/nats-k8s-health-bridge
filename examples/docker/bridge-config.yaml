@@ -1,0 +1,19 @@
+# Local Docker demo only. For Kubernetes, see config.yaml and Helm chart.
+log_level: info
+poll_interval: 5s
+max_observation_age: 20s
+server:
+  port: 8080
+  bind_address: 0.0.0.0
+  readiness_fail_on_degraded: false
+  shutdown_timeout: 10s
+nats:
+  # Resolves to NATS via the shared Docker network.
+  url: nats://nats-demo:4222
+consumers:
+  - name: lab-worker
+    stream: LAB_EVENTS
+    consumer: LAB_WORKER
+    thresholds:
+      max_lag: 100
+      max_ack_pending: 50
