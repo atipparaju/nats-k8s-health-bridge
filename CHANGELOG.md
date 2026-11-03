@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Skip retry delays for permanent JetStream missing-stream, missing-consumer and authorization errors while retaining retries for transient failures.
 - Disabled automatic GHCR publishing on main/tag pushes; release image publication now requires an explicit manual tag-scoped CI dispatch.
 - Register environment-only diagnostic bearer-token keys explicitly in Viper to prevent silently unauthenticated `/metrics` and `/status` endpoints when tokens are injected from Kubernetes Secrets.
 - Correct Docker multi-platform builds by compiling Go binaries for BuildKit target architecture.

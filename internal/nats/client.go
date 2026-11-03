@@ -10,6 +10,7 @@ package nats
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -121,9 +122,25 @@ func (c *Client) GetConsumerInfo(ctx context.Context, stream, consumer string) (
 		if err == nil {
 			return info, nil
 		}
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		if !shouldRetryConsumerInfo(err) {
+			return nil, err
+		}
 		lastErr = err
 	}
 	return nil, lastErr
+}
+
+// shouldRetryConsumerInfo retries only failures that might recover without a
+// configuration change. Missing streams/consumers and authorization errors are
+// permanent for a given poll; the next scheduled cycle still checks again.
+func shouldRetryConsumerInfo(err error) bool {
+	return !errors.Is(err, jetstream.ErrConsumerNotFound) &&
+		!errors.Is(err, jetstream.ErrStreamNotFound) &&
+		!errors.Is(err, nats.ErrAuthorization) &&
+		!errors.Is(err, context.Canceled)
 }
 
 func (c *Client) fetchConsumerInfo(ctx context.Context, stream, consumer string) (*ConsumerInfo, error) {
