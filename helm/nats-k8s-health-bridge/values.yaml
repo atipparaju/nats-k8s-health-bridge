@@ -6,6 +6,7 @@ image:
 # Port the sidecar listens on
 port: 8080
 pollInterval: 10s
+pollTimeout: 8s
 maxObservationAge: 30s
 server:
   bindAddress: 0.0.0.0

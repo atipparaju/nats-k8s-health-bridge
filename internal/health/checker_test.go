@@ -417,3 +417,37 @@ func TestChecker_ProcessingHeartbeatLifecycle(t *testing.T) {
 	states := checker.States()
 	if states[0].Status != StatusUnknown { t.Fatalf("expired heartbeat status=%s", states[0].Status) }
 }
+
+// blockingPollClient deliberately stalls one consumer until its context expires.
+// The other consumer should still get a successful observation in the same cycle.
+type blockingPollClient struct{}
+
+func (blockingPollClient) IsConnected() bool { return true }
+func (blockingPollClient) GetConsumerInfo(ctx context.Context, stream, consumer string) (*natsclient.ConsumerInfo, error) {
+	if stream == "SLOW" {
+		<-ctx.Done()
+		return nil, ctx.Err()
+	}
+	return &natsclient.ConsumerInfo{}, nil
+}
+
+func TestChecker_BoundedConcurrentPollingDoesNotStarveHealthyConsumer(t *testing.T) {
+	consumers := []config.ConsumerConfig{
+		{Name:"slow", Stream:"SLOW", Consumer:"slow"},
+		{Name:"fast", Stream:"FAST", Consumer:"fast"},
+	}
+	checker := newTestChecker(blockingPollClient{}, consumers)
+	checker.cfg.PollTimeout = 100*time.Millisecond
+	started := time.Now()
+	checker.pollAll(context.Background())
+	if time.Since(started) > 750*time.Millisecond { t.Fatal("polling cycle exceeded bounded latency") }
+	states := checker.States()
+	foundFast := false
+	for _, state := range states {
+		if state.Name == "fast" {
+			foundFast = true
+			if state.Status != StatusHealthy { t.Fatalf("fast consumer starved: %+v", state) }
+		}
+	}
+	if !foundFast { t.Fatal("fast consumer missing from results") }
+}

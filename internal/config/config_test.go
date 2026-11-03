@@ -253,3 +253,12 @@ func TestLoad_DiagnosticTokensEnvironmentOverridesYAML(t *testing.T) {
 		t.Fatal("environment tokens must override YAML tokens")
 	}
 }
+
+func TestLoad_PollTimeoutDefaultAndValidation(t *testing.T) {
+	path := writeTestConfig(t, "nats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
+	cfg, err := Load(path)
+	if err != nil { t.Fatal(err) }
+	if cfg.PollTimeout != 8*time.Second { t.Fatalf("default poll_timeout=%v, want 8s", cfg.PollTimeout) }
+	path = writeTestConfig(t, "poll_timeout: -1s\nnats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
+	if _, err := Load(path); err == nil { t.Fatal("negative poll_timeout must be rejected") }
+}

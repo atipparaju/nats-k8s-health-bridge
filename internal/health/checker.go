@@ -103,10 +103,47 @@ func (c *Checker) Run(ctx context.Context) {
 	}
 }
 
+// Each polling cycle uses a bounded worker pool and a shared deadline. This
+// prevents a failing consumer from blocking observations of healthy consumers.
+const maxConcurrentPolls = 4
+
 func (c *Checker) pollAll(ctx context.Context) {
-	for _, consumerCfg := range c.cfg.Consumers {
-		c.pollOne(ctx, consumerCfg)
-	}
+    timeout := c.cfg.PollTimeout
+    if timeout <= 0 {
+        timeout = 8 * time.Second // for tests/programmatically created configurations
+    }
+    ctx, cancel := context.WithTimeout(ctx, timeout)
+    defer cancel()
+
+    workers := len(c.cfg.Consumers)
+    if workers > maxConcurrentPolls { workers = maxConcurrentPolls }
+    jobs := make(chan config.ConsumerConfig)
+    var wg sync.WaitGroup
+    for i := 0; i < workers; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            for {
+                select {
+                case <-ctx.Done():
+                    return
+                case consumerCfg, ok := <-jobs:
+                    if !ok { return }
+                    c.pollOne(ctx, consumerCfg)
+                }
+            }
+        }()
+    }
+dispatch:
+    for _, consumerCfg := range c.cfg.Consumers {
+        select {
+        case <-ctx.Done():
+            break dispatch
+        case jobs <- consumerCfg:
+        }
+    }
+    close(jobs)
+    wg.Wait()
 }
 
 func (c *Checker) pollOne(ctx context.Context, consumerCfg config.ConsumerConfig) {
@@ -156,11 +193,12 @@ func (c *Checker) pollOne(ctx context.Context, consumerCfg config.ConsumerConfig
 		)
 	}
 
+	status := state.Status
 	c.mu.Unlock()
 
 	c.logger.Debug("consumer polled",
 		"consumer", consumerCfg.Name,
-		"status", state.Status,
+		"status", status,
 		"lag", info.NumPending,
 		"ack_pending", info.NumAckPending,
 	)
