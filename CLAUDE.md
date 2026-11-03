@@ -7,7 +7,7 @@
 
 ## Project Purpose
 
-`nats-k8s-health-bridge` is an open-source Go sidecar that bridges NATS JetStream
+`nats-k8s-health-bridge` is a pre-release Go sidecar intended for open-source release that bridges NATS JetStream
 consumer health metrics to Kubernetes-native liveness and readiness probe HTTP endpoints,
 plus a Prometheus /metrics endpoint.
 
@@ -16,9 +16,9 @@ way to signal their health to Kubernetes. A consumer can be lagging, stuck, or d
 while the pod still shows `Ready`. This sidecar runs alongside the consumer container and
 translates JetStream consumer state into K8s probe responses.
 
-**CNCF positioning:** Fills a verified gap in the CNCF landscape. NATS is a CNCF Incubating
-project. No existing tool (prometheus-nats-exporter, nats-surveyor, KEDA, NACK) provides
-per-pod sidecar health probes for JetStream consumers.
+**Ecosystem positioning:** This project focuses on Kubernetes policy, freshness, and application
+heartbeat integration for JetStream consumers. Related NATS monitoring and autoscaling tools
+already exist; do not claim uniqueness or NATS/CNCF endorsement without independent evidence.
 
 **GitHub repo:** https://github.com/atipparaju/nats-k8s-health-bridge (private)
 **Go module:** `github.com/atipparaju/nats-k8s-health-bridge`
@@ -55,13 +55,13 @@ per-pod sidecar health probes for JetStream consumers.
 
 ---
 
-## Complete File Tree
+## Representative File Tree
 
 ```
 nats-k8s-health-bridge/
 ├── CLAUDE.md                        ← this file
 ├── README.md                        ← user-facing docs
-├── LICENSE                          ← Apache 2.0 (TODO: create)
+├── LICENSE                          ← Apache 2.0
 ├── go.mod                           ← Go module definition, pinned deps
 ├── go.sum                           ← dependency checksums (generated)
 ├── config.yaml                      ← annotated example configuration
@@ -70,7 +70,9 @@ nats-k8s-health-bridge/
 ├── .gitignore
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                   ← test on PR, docker push on main
+│       ├── ci.yml                   ← tests and container release pipeline
+│       ├── container-security.yml   ← container vulnerability scanning
+│       └── kind-smoke.yml           ← Kubernetes smoke tests
 ├── cmd/
 │   └── sidecar/
 │       └── main.go                  ← entrypoint: cobra CLI, signal handling, wiring
@@ -96,6 +98,8 @@ nats-k8s-health-bridge/
 
 ---
 
+For the complete current tree, inspect the repository. The listing below highlights core source files and does not enumerate all tests and documentation.
+
 ## Dependency Versions (pinned in go.mod)
 
 | Package | Version | Purpose |
@@ -105,7 +109,7 @@ nats-k8s-health-bridge/
 | `github.com/spf13/cobra` | v1.9.1 | CLI flags |
 | `github.com/spf13/viper` | v1.20.1 | YAML + env var config |
 
-Go version: **1.23** (uses built-in `log/slog` for structured logging).
+Go module minimum version: **1.24** (see `go.mod`; CI/toolchain pins may be newer).
 
 ---
 
@@ -119,19 +123,20 @@ The project uses the **new JetStream API** (not the legacy `nc.JetStream()` cont
 import "github.com/nats-io/nats.go/jetstream"
 
 js, err := jetstream.New(nc)
-info, err := js.ConsumerInfo(ctx, streamName, consumerName)
+consumer, err := js.Consumer(ctx, streamName, consumerName)
+info, err := consumer.Info(ctx)
 ```
 
 **ConsumerInfo fields used:**
 - `info.NumPending`     — undelivered messages (lag)
 - `info.NumAckPending`  — delivered but not yet acked
-- `info.NumRedelivered` — total redeliveries
+- `info.NumRedelivered` — current redelivery snapshot, not a lifetime counter
 - `info.NumWaiting`     — pull consumers: waiting fetch requests
 - `info.PushBound`      — push consumer has active subscriber
 
 **Connection state:**
 ```go
-nc.IsConnected() // bool — use for /healthz liveness
+nc.IsConnected() // bool — NATS availability contributes to /readyz, not /healthz liveness
 ```
 
 ---
@@ -153,21 +158,24 @@ Config is loaded in `internal/config/config.go` via viper:
 ```
 Config
 ├── LogLevel       string
-├── PollInterval   time.Duration
+├── PollInterval       time.Duration
+├── PollTimeout        time.Duration (default 8s, bounded polling cycle)
+├── MaxObservationAge  time.Duration
 ├── Server
-│   ├── Port            int
-│   └── ShutdownTimeout time.Duration
+│   ├── Port, BindAddress, ShutdownTimeout
+│   ├── ReadinessFailOnDegraded
+│   ├── AllowUnauthenticatedDiagnostics (false by default)
+│   └── MetricsToken, StatusToken
 ├── NATS
 │   ├── URL, CredentialsFile, NKeyFile
 │   ├── TLSCert, TLSKey, TLSCA
 │   ├── ConnectTimeout, ReconnectWait, MaxReconnects
 └── Consumers []
     ├── Name, Stream, Consumer
+    ├── HeartbeatTimeout time.Duration (optional)
     └── Thresholds
-        ├── MaxLag            uint64
-        ├── MaxAckPending     uint64
-        ├── MaxRedeliveryRate float64
-        └── EvalWindow        time.Duration
+        ├── MaxLag        uint64
+        └── MaxAckPending uint64
 ```
 
 ---
@@ -176,10 +184,10 @@ Config
 
 | Endpoint | Probe type | Logic |
 |---|---|---|
-| `GET /healthz` | Liveness | `200` if `nc.IsConnected()`, else `503` |
-| `GET /readyz` | Readiness | `200` if all consumers `StatusHealthy`, else `503` with reasons |
-| `GET /metrics` | Prometheus | Standard Prometheus exposition format (OpenMetrics enabled) |
-| `GET /status` | Debug | Full JSON: connection state + all consumer states + timestamp |
+| `GET /healthz` | Liveness | Process liveness independent of NATS connectivity |
+| `GET /readyz` | Readiness | Requires NATS, fresh consumer observations and enabled heartbeat; threshold degradation fails readiness only with strict opt-in |
+| `GET /metrics` | Prometheus | HTTP 401 without configured bearer token, unless local-test anonymous opt-in |
+| `GET /status` | Debug | HTTP 401 without configured bearer token, unless local-test anonymous opt-in; historical message counts may be stale |
 
 ---
 
@@ -192,7 +200,7 @@ All metrics registered in `internal/metrics/prometheus.go`:
 | `nats_consumer_up` | Gauge | `consumer_name`, `stream`, `consumer` |
 | `nats_consumer_lag` | Gauge | `consumer_name`, `stream`, `consumer` |
 | `nats_consumer_ack_pending` | Gauge | `consumer_name`, `stream`, `consumer` |
-| `nats_consumer_redelivered_total` | Counter | `consumer_name`, `stream`, `consumer` |
+| `nats_consumer_redelivered` | Gauge | `consumer_name`, `stream`, `consumer` |
 | `nats_connected` | Gauge | _(none)_ |
 
 Plus standard Go runtime and process metrics via `prometheus.NewGoCollector()`.
@@ -278,8 +286,9 @@ make run-local
 # Build Docker image
 make docker-build
 
-# Push Docker image to GHCR (needs docker login ghcr.io)
-make docker-push
+# Push Docker image to GHCR — restricted to explicitly approved release operations
+# DO NOT run without owner approval, package visibility review and successful CI.
+# make docker-push
 ```
 
 ---
@@ -287,8 +296,8 @@ make docker-push
 ## Running Tests Locally
 
 ```bash
-# Start NATS with JetStream for integration tests
-docker run -d --name nats-test -p 4222:4222 nats:latest -js
+# Start NATS with JetStream for integration tests (use a reviewed, pinned version)
+docker run -d --name nats-test -p 4222:4222 nats:2.15.1-alpine3.22 -js
 
 # Run tests
 go test -race -count=1 ./...
@@ -310,8 +319,8 @@ Unit tests should be placed alongside source files: `internal/health/checker_tes
 ## Testing with a Local NATS Server
 
 ```bash
-# Start NATS with JetStream
-docker run -d --name nats-dev -p 4222:4222 -p 8222:8222 nats:latest -js
+# Start NATS with JetStream (use a reviewed, pinned version)
+docker run -d --name nats-dev -p 4222:4222 -p 8222:8222 nats:2.15.1-alpine3.22 -js
 
 # Create a test stream and consumer (requires nats CLI)
 nats stream add ORDERS --subjects "orders.>" --storage memory --retention limits --max-msgs -1 --max-bytes -1 --max-age -1 --replicas 1 --defaults
@@ -323,19 +332,22 @@ make run-local
 # In another terminal — check endpoints
 curl http://localhost:8080/healthz   # should return {"status":"ok"}
 curl http://localhost:8080/readyz    # may return 503 until consumer is polled
-curl http://localhost:8080/status    # full JSON state
-curl http://localhost:8080/metrics   # Prometheus text
+curl http://localhost:8080/status    # 401 unless a bearer token is configured or isolated-test anonymous access is explicitly enabled
+curl http://localhost:8080/metrics   # 401 under the same default policy
 
 # Publish some test messages to create lag
 nats pub orders.new "test message" --count=100
 
-# Watch lag appear in /status
-curl http://localhost:8080/status | jq .
+# Watch lag with an authenticated status request (or local-only explicit anonymous opt-in)
+# curl -H "Authorization: Bearer $NKHB_SERVER_STATUS_TOKEN" http://localhost:8080/status | jq .
 ```
 
 ---
 
 ## Current Implementation Status
+
+**Readiness policy:** Consumer lag and acknowledgement threshold breaches are observational by default, not automatic pod eviction. An optional application heartbeat is supported; see README for its limitations. A pure `LegacyEvaluator` currently implements health thresholds, while reuse of `jsm.go` is documented as a future compatibility study.
+
 
 ### ✅ Complete (Phase 1)
 - [x] Project scaffold (go.mod, Dockerfile, Makefile, CI workflow)
@@ -355,7 +367,7 @@ curl http://localhost:8080/status | jq .
 - [x] Unit tests for config, health, server, and metrics packages
 - [x] Module path set to `github.com/atipparaju/nats-k8s-health-bridge`
 - [x] Integration test with real NATS (build tag: `integration`)
-- [x] `MaxRedeliveryRate` threshold evaluation with sliding window
+- [x] Removed invalid redelivery-rate inference; redelivery remains available as a snapshot gauge
 - [x] Retry logic for NATS operations
 - [x] CONTRIBUTING.md
 - [x] Docker config: embedded default config.yaml, env-var-only mode

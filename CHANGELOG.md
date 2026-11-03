@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Reconciled maintainer documentation with actual health, redelivery, authorization and evaluator behavior.
+- Removed the misleading redelivery-rate health threshold, which inferred delivery rates from non-monotonic JetStream consumer snapshots.
 - Bound JetStream polling with a four-worker pool and configurable cycle timeout to prevent slow consumers from starving other observations.
 - Skip retry delays for permanent JetStream missing-stream, missing-consumer and authorization errors while retaining retries for transient failures.
 - Disabled automatic GHCR publishing on main/tag pushes; release image publication now requires an explicit manual tag-scoped CI dispatch.
@@ -24,8 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable HTTP bind address and optional bearer-token protection for `/metrics` and `/status`.
 - Optional per-consumer application processing heartbeat (`heartbeat_timeout`) and loopback-only `POST /heartbeat/{consumer}` endpoint to detect stalled consumers.
 - Configurable `max_observation_age` (default `30s`) and `last_successful` consumer timestamp.
-
-- Removed the misleading redelivery-rate health threshold, which inferred delivery rates from non-monotonic JetStream consumer snapshots.
 
 ### Changed
 - Diagnostic endpoints now fail closed when tokens are omitted; insecure anonymous access requires an explicit test-only opt-in.
