@@ -105,6 +105,17 @@ Configuration is loaded from a YAML file with **environment variable overrides**
 | `NKHB_NATS_CONNECT_TIMEOUT` | `nats.connect_timeout` | `5s` | Initial connection timeout |
 | `NKHB_NATS_MAX_RECONNECTS` | `nats.max_reconnects` | `-1` | `-1` = infinite |
 
+### NATS credential and TLS configuration
+
+NATS credentials and TLS settings may be provided in YAML or through the `NKHB_NATS_*` environment variables listed above. **Environment-only values are supported**, including Kubernetes Secret-mounted file paths; when both YAML and an environment value are present, the environment value wins.
+
+- Use either `nats.credentials_file` (a NATS `.creds` file) **or** `nats.nkey_file` (an NKey seed file), never both.
+- Client-certificate authentication requires **both** `nats.tls_cert` and `nats.tls_key`. A standalone `nats.tls_ca` is valid for server trust without a client certificate.
+- File-path values identify mounted credentials inside the bridge container; mounting a Kubernetes Secret is still required. Do not pass credential contents in environment variables or commit private keys.
+- Invalid combinations fail config validation before connecting, rather than silently falling back to an unauthenticated connection. Missing or unreadable credential files must cause connection setup to fail; review the error securely and check the mount.
+
+The application and bridge use separate NATS connections, even if they share a mounted Secret. For sensitive NATS URL logging and redaction hardening, see tracked Issue #41.
+
 ### Full config.yaml example
 
 See [`config.yaml`](config.yaml) for a fully annotated example.
