@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configurable `max_observation_age` (default `30s`) and `last_successful` consumer timestamp.
 
 ### Changed
+- Updated the NATS upstream CNCF maturity badge and independent-project attribution; added the pre-publication audit checklist.
 - Pin NATS development/test images and a supported Go builder/CI toolchain to specific version tags; digest pinning remains a release follow-up.
 - Diagnostic endpoints now fail closed when tokens are omitted; insecure anonymous access requires an explicit test-only opt-in.
 - Extracted consumer threshold evaluation behind an interface while preserving existing strict-threshold semantics; added upstream jsm.go compatibility design documentation.
