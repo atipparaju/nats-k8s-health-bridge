@@ -48,6 +48,7 @@ data:
       - name: absent-worker
         stream: TEST
         consumer: worker
+        heartbeat_timeout: 15s
         thresholds:
           max_lag: 100
 ---
@@ -64,6 +65,10 @@ spec:
       labels: {app: health-bridge}
     spec:
       containers:
+        # Test-only helper for pod-local heartbeats; production sidecars do not need this.
+        - name: heartbeat-client
+          image: busybox:1.36
+          command: ["sh", "-c", "sleep 3600"]
         - name: bridge
           image: nats-k8s-health-bridge:e2e
           imagePullPolicy: Never

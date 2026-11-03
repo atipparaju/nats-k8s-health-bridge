@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-kubectl port-forward deployment/health-bridge 18080:8080 >/tmp/bridge-port-forward.log 2>&1 &
-forward_pid=$!
-trap 'kill "$forward_pid" 2>/dev/null || true' EXIT
+bridge_pid=""
+nats_pid=""
+cleanup() {
+  if [[ -n "$bridge_pid" ]]; then kill "$bridge_pid" 2>/dev/null || true; fi
+  if [[ -n "$nats_pid" ]]; then kill "$nats_pid" 2>/dev/null || true; fi
+}
+trap cleanup EXIT
 
-for attempt in $(seq 1 30); do
+kubectl port-forward deployment/health-bridge 18080:8080 >/tmp/bridge-port-forward.log 2>&1 &
+bridge_pid=$!
+
+for attempt in $(seq 1 40); do
   if curl --silent --fail http://127.0.0.1:18080/healthz >/dev/null; then break; fi
   sleep 1
 done
@@ -20,14 +27,61 @@ assert_code() {
   fi
 }
 
-echo "Verify process liveness and missing-consumer readiness"
+wait_code() {
+  local expected="$1" url="$2"
+  for attempt in $(seq 1 25); do
+    if [[ "$(curl --silent --output /dev/null --write-out '%{http_code}' "$url")" == "$expected" ]]; then return 0; fi
+    sleep 1
+  done
+  echo "Timed out waiting for HTTP $expected at $url"
+  return 1
+}
+
+start_nats_forward() {
+  kubectl port-forward svc/nats 14222:4222 >/tmp/nats-port-forward.log 2>&1 &
+  nats_pid=$!
+}
+
+seed_consumer() {
+  for attempt in $(seq 1 8); do
+    if go run ./test/e2e/seed --server nats://127.0.0.1:14222; then return 0; fi
+    sleep 2
+  done
+  echo "Unable to create test stream/consumer"
+  return 1
+}
+
+send_heartbeat() {
+  kubectl exec deployment/health-bridge -c heartbeat-client -- \
+    wget -qO- --post-data='' http://127.0.0.1:8080/heartbeat/absent-worker |
+    grep -q '"accepted"'
+}
+
+echo "1. Check initial missing-consumer behavior and process liveness"
 assert_code 200 http://127.0.0.1:18080/healthz
 assert_code 503 http://127.0.0.1:18080/readyz
 assert_code 200 http://127.0.0.1:18080/status
 assert_code 200 http://127.0.0.1:18080/metrics
 
-echo "Stop upstream NATS and verify bridge does not enter a restart storm"
+echo "2. Seed real stream/consumer; verify heartbeat is required"
+start_nats_forward
+sleep 2
+seed_consumer
+assert_code 503 http://127.0.0.1:18080/readyz
+curl -fsS http://127.0.0.1:18080/status | grep -q 'processing heartbeat missing or expired'
+
+echo "3. Heartbeat restores healthy readiness"
+send_heartbeat
+wait_code 200 http://127.0.0.1:18080/readyz
+curl -fsS http://127.0.0.1:18080/status | grep -q '"status":"healthy"'
+
+echo "4. Heartbeat expiration fails readiness without restarting bridge"
+sleep 17
+wait_code 503 http://127.0.0.1:18080/readyz
+curl -fsS http://127.0.0.1:18080/status | grep -q 'processing heartbeat missing or expired'
 before=$(kubectl get pod -l app=health-bridge -o jsonpath='{.items[0].status.containerStatuses[0].restartCount}')
+
+echo "5. Stop NATS and validate liveness/readiness separation"
 kubectl scale deployment/nats --replicas=0
 kubectl rollout status deployment/nats --timeout=60s
 sleep 5
@@ -38,4 +92,15 @@ if [[ "$after" != "$before" ]]; then
   echo "Bridge restarted during NATS outage: before=$before after=$after"
   exit 1
 fi
-echo "Kind probe smoke test passed"
+
+echo "6. Restore NATS; re-seed in-memory stream and recover readiness"
+if [[ -n "$nats_pid" ]]; then kill "$nats_pid" 2>/dev/null || true; fi
+nats_pid=""
+kubectl scale deployment/nats --replicas=1
+kubectl rollout status deployment/nats --timeout=120s
+start_nats_forward
+sleep 2
+seed_consumer
+send_heartbeat
+wait_code 200 http://127.0.0.1:18080/readyz
+echo "Kind positive/recovery smoke tests passed"
