@@ -20,6 +20,8 @@ translates JetStream consumer state into K8s probe responses.
 heartbeat integration for JetStream consumers. Related NATS monitoring and autoscaling tools
 already exist; do not claim uniqueness or NATS/CNCF endorsement without independent evidence.
 
+**NATS maturity:** The upstream NATS project graduated in the CNCF on November 2, 2026 (https://www.cncf.io/projects/nats/). This private bridge is independently maintained; do not imply CNCF membership, certification, sponsorship or NATS endorsement for this repository.
+
 **GitHub repo:** https://github.com/atipparaju/nats-k8s-health-bridge (private)
 **Go module:** `github.com/atipparaju/nats-k8s-health-bridge`
 **License:** Apache 2.0
