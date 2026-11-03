@@ -150,7 +150,7 @@ Set `server.readiness_fail_on_degraded: true` only if your deployment explicitly
 
 JetStream consumer-info `num_redelivered` is a point-in-time count, not a monotonic lifetime counter. The former `max_redelivery_rate` threshold was calculated from changes in `num_redelivered` and `num_ack_pending`; these snapshots cannot provide a reliable delivery denominator or event rate. **That threshold has been removed** rather than producing misleading health decisions. `eval_window` is also removed because it was only used by this calculation.
 
-For rate-based alerting, instrument message delivery attempts and acknowledgments in the consumer application or another reliable event source. Derive redelivery ratios from observed events over an explicit window. `/status` still includes the current `num_redelivered` snapshot; the metric fix is handled separately in the redelivery gauge PR. Remove `max_redelivery_rate` and `eval_window` from existing configurations before upgrading.
+For rate-based alerting, instrument message delivery attempts and acknowledgments in the consumer application or another reliable event source. Derive redelivery ratios from observed events over an explicit window. `/status` still includes the current `num_redelivered` snapshot; the current `nats_consumer_redelivered` Prometheus metric is a gauge, not a cumulative counter. Remove `max_redelivery_rate` and `eval_window` from existing configurations before upgrading.
 
 ### Securing HTTP endpoints
 
@@ -214,6 +214,10 @@ The consumer threshold evaluator is isolated behind a `ConsumerEvaluator` interf
 The CI workflow does **not** automatically publish GHCR images on pushes to `main` or version tags. Publishing requires a manual GitHub Actions **CI → Run workflow** invocation against a `v*` tag reference with the `publish_image` boolean explicitly selected. PR and normal push workflows continue to run tests but skip the publication job. Before publishing, verify the linked GHCR package's visibility independently in GitHub Packages; a private source repository does not guarantee that its associated container packages are private. This project deliberately does not modify package visibility settings automatically.
 
 Do not select the publish option before code review, a green test matrix, a reviewed tag, and package visibility approval. For local development, use `docker build` rather than relying on an existing GHCR image.
+
+### Maintainer architecture reference
+
+The [developer architecture guide](CLAUDE.md) documents current readiness, authentication, redelivery and evaluator semantics. For upstream monitoring reuse, see [jsm.go compatibility](docs/jsm-evaluator-compatibility.md).
 
 ## Building
 
