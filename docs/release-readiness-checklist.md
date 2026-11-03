@@ -37,26 +37,26 @@ These observations must remain covered in regression tests as remediation procee
 
 | Priority | Finding | Evidence | Issue | Exit criterion |
 | --- | --- | --- | --- | --- |
-| P1 | Optional NATS auth/TLS environment-only keys may be silently omitted by Viper unmarshaling | `internal/config/config.go` binds only diagnostic tokens | [#39](../issues/39) | Field-specific YAML/env precedence tests and real credential/TLS integration validation |
-| P1 | NATS unavailable during initial startup causes process failure before HTTP probes start | `cmd/sidecar/main.go` creates NATS client before HTTP server | [#40](../issues/40) | Fail-operational startup policy and Kind NATS-down-first/recovery test |
-| P1 | Error messages/log fields may expose credentials embedded in configured NATS URLs | `internal/nats/client.go` formats full `cfg.NATS.URL` into errors | [#41](../issues/41) | Redacted URL handling and synthetic credential-leak regression tests |
-| P1 | Visible default-branch rulesets lack required CI status checks | Repository ruleset GET | [#42](../issues/42) | Repo-admin verifies required checks, bypass scope and package privacy |
-| P1 | `:latest` and incomplete Secret wiring remain in Helm/sidecar examples | `README.md`, Helm values/template | [#43](../issues/43) | Correct template guidance, image provenance and Secret-mount tests |
-| P1 | Legacy setup/push commands could bypass documented publication discipline | `setup.sh`, `Makefile` | [#45](../issues/45) | Remove/guard obsolete publication paths; no actual publishing |
-| P1 | Release verification gaps remain (cross-platform, secret-history, licenses, multi-arch runtime, SBOM) | Current CI/release process | [#47](../issues/47) | Captured evidence, security review and owner sign-off |
+| P1 | Optional NATS auth/TLS environment-only keys may be silently omitted by Viper unmarshaling | `internal/config/config.go` binds only diagnostic tokens | [#39](https://github.com/atipparaju/nats-k8s-health-bridge/issues/39) | Field-specific YAML/env precedence tests and real credential/TLS integration validation |
+| P1 | NATS unavailable during initial startup causes process failure before HTTP probes start | `cmd/sidecar/main.go` creates NATS client before HTTP server | [#40](https://github.com/atipparaju/nats-k8s-health-bridge/issues/40) | Fail-operational startup policy and Kind NATS-down-first/recovery test |
+| P1 | Error messages/log fields may expose credentials embedded in configured NATS URLs | `internal/nats/client.go` formats full `cfg.NATS.URL` into errors | [#41](https://github.com/atipparaju/nats-k8s-health-bridge/issues/41) | Redacted URL handling and synthetic credential-leak regression tests |
+| P1 | Visible default-branch rulesets lack required CI status checks | Repository ruleset GET | [#42](https://github.com/atipparaju/nats-k8s-health-bridge/issues/42) | Repo-admin verifies required checks, bypass scope and package privacy |
+| P1 | `:latest` and incomplete Secret wiring remain in Helm/sidecar examples | `README.md`, Helm values/template | [#43](https://github.com/atipparaju/nats-k8s-health-bridge/issues/43) | Correct template guidance, image provenance and Secret-mount tests |
+| P1 | Legacy setup/push commands could bypass documented publication discipline | `setup.sh`, `Makefile` | [#45](https://github.com/atipparaju/nats-k8s-health-bridge/issues/45) | Remove/guard obsolete publication paths; no actual publishing |
+| P1 | Release verification gaps remain (cross-platform, secret-history, licenses, multi-arch runtime, SBOM) | Current CI/release process | [#47](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47) | Captured evidence, security review and owner sign-off |
 
 The findings above are **potential risks and confirmed process/code gaps**, not claims of actual leaked credentials, a compromise, or a production incident.
 
 ## 3. Documentation, contributor experience and code readability
 
-- [x] Update NATS's maturity badge and clarify independent project status in the README — [#38](../issues/38) (documentation PR).
-- [ ] Reconcile `SECURITY.md` supported versions, `CHANGELOG.md`, Helm `appVersion`, unavailable `v0.1.0` public release and GitHub license detection — [#44](../issues/44).
-- [ ] Remove assumptions that a private/unpublished GHCR image is pullable as `:latest` — [#43](../issues/43).
-- [ ] Verify full Docker quickstart in **PowerShell 7+ on Windows** and **Bash on Linux**, including shell quoting, bind mount, authorized diagnostics and cleanup — [#47](../issues/47).
-- [ ] Archive or replace `setup.sh` and stale release comments — [#45](../issues/45).
-- [ ] Consistently apply `gofmt` and enforce formatting in CI — [#46](../issues/46).
-- [ ] Correct inaccurate/misattached comments (notably `IsReady` vs `RecordHeartbeat` in `checker.go`; /healthz comment in `server.go`) — [#46](../issues/46).
-- [ ] Comment **why** the worker pool is bounded, why observations become stale, why heartbeat is a readiness-only signal, and why a NATS outage does not fail liveness — [#46](../issues/46).
+- [x] Update NATS's maturity badge and clarify independent project status in the README — [#38](https://github.com/atipparaju/nats-k8s-health-bridge/issues/38) (documentation PR).
+- [ ] Reconcile `SECURITY.md` supported versions, `CHANGELOG.md`, Helm `appVersion`, unavailable `v0.1.0` public release and GitHub license detection — [#44](https://github.com/atipparaju/nats-k8s-health-bridge/issues/44).
+- [ ] Remove assumptions that a private/unpublished GHCR image is pullable as `:latest` — [#43](https://github.com/atipparaju/nats-k8s-health-bridge/issues/43).
+- [ ] Verify full Docker quickstart in **PowerShell 7+ on Windows** and **Bash on Linux**, including shell quoting, bind mount, authorized diagnostics and cleanup — [#47](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47).
+- [ ] Archive or replace `setup.sh` and stale release comments — [#45](https://github.com/atipparaju/nats-k8s-health-bridge/issues/45).
+- [ ] Consistently apply `gofmt` and enforce formatting in CI — [#46](https://github.com/atipparaju/nats-k8s-health-bridge/issues/46).
+- [ ] Correct inaccurate/misattached comments (notably `IsReady` vs `RecordHeartbeat` in `checker.go`; /healthz comment in `server.go`) — [#46](https://github.com/atipparaju/nats-k8s-health-bridge/issues/46).
+- [ ] Comment **why** the worker pool is bounded, why observations become stale, why heartbeat is a readiness-only signal, and why a NATS outage does not fail liveness — [#46](https://github.com/atipparaju/nats-k8s-health-bridge/issues/46).
 - [ ] Preserve concise GoDoc for public types and important operations; avoid comments that merely repeat a statement in the next line.
 - [ ] Review README, `CLAUDE.md`, security policy, code of conduct and examples for publication-safe wording, working links and unintended personal/contact information before release.
 
@@ -64,14 +64,14 @@ The findings above are **potential risks and confirmed process/code gaps**, not 
 
 ## 4. Release supply chain and repository settings
 
-- [ ] Require named PR checks for Test & Lint, Integration Test, Container vulnerability gate, and Kind / Probe Smoke in default-branch rules, with appropriate administrator exceptions — [#42](../issues/42).
-- [ ] Confirm GHCR image/package visibility **in GitHub's own package settings**; do not infer it from repository privacy — [#42](../issues/42).
-- [ ] Ensure manual release/tag approval and image publication stay separate from routine CI — [#45](../issues/45).
-- [ ] Review upstream container image digests, build provenance and provenance metadata for Linux amd64 and arm64 — [#47](../issues/47).
-- [ ] Obtain an SBOM and verify license compatibility/attributions; run dependency, container and Git history secret scans — [#47](../issues/47).
-- [ ] Validate image signature/attestation strategy and a minimal release artifact manifest — [#47](../issues/47).
-- [ ] Validate that any production-ready claims are based on independent testing, rather than on passing source and Kind tests alone — [#47](../issues/47).
-- [ ] Confirm publication ownership/IP approvals and any other required external approvals before making any part of the project public — [#47](../issues/47).
+- [ ] Require named PR checks for Test & Lint, Integration Test, Container vulnerability gate, and Kind / Probe Smoke in default-branch rules, with appropriate administrator exceptions — [#42](https://github.com/atipparaju/nats-k8s-health-bridge/issues/42).
+- [ ] Confirm GHCR image/package visibility **in GitHub's own package settings**; do not infer it from repository privacy — [#42](https://github.com/atipparaju/nats-k8s-health-bridge/issues/42).
+- [ ] Ensure manual release/tag approval and image publication stay separate from routine CI — [#45](https://github.com/atipparaju/nats-k8s-health-bridge/issues/45).
+- [ ] Review upstream container image digests, build provenance and provenance metadata for Linux amd64 and arm64 — [#47](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47).
+- [ ] Obtain an SBOM and verify license compatibility/attributions; run dependency, container and Git history secret scans — [#47](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47).
+- [ ] Validate image signature/attestation strategy and a minimal release artifact manifest — [#47](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47).
+- [ ] Validate that any production-ready claims are based on independent testing, rather than on passing source and Kind tests alone — [#47](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47).
+- [ ] Confirm publication ownership/IP approvals and any other required external approvals before making any part of the project public — [#47](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47).
 
 ## 5. Suggested remediation order
 
