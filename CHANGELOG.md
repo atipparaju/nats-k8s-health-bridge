@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fail readiness on stale consumer observations rather than reusing outdated successful poll results; report stale status in `/status`.
 
 ### Added
+- A cross-platform Docker quickstart with a matching real JetStream consumer configuration and local image build.
 - Expanded Kind smoke coverage with real consumer creation, healthy readiness, heartbeat expiration, NATS outage and recovery.
 - Cross-platform local Kubernetes validation report covering functional, resilience, heartbeat, security and rolling-update testing.
 - Container image vulnerability CI with Trivy: report HIGH/CRITICAL and block fixable CRITICAL findings.
