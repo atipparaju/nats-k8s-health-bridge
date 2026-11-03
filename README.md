@@ -196,6 +196,12 @@ See [Local Kubernetes Validation Report](docs/local-kubernetes-validation.md) fo
 
 The consumer threshold evaluator is isolated behind a `ConsumerEvaluator` interface; the current `LegacyEvaluator` remains the default, preserving existing behavior. See [jsm.go evaluator compatibility study](docs/jsm-evaluator-compatibility.md) for the upstream NATS monitor parity matrix and proposed adapter design. The upstream library is **not yet integrated**.
 
+### Container publication controls
+
+The CI workflow does **not** automatically publish GHCR images on pushes to `main` or version tags. Publishing requires a manual GitHub Actions **CI → Run workflow** invocation against a `v*` tag reference with the `publish_image` boolean explicitly selected. PR and normal push workflows continue to run tests but skip the publication job. Before publishing, verify the linked GHCR package's visibility independently in GitHub Packages; a private source repository does not guarantee that its associated container packages are private. This project deliberately does not modify package visibility settings automatically.
+
+Do not select the publish option before code review, a green test matrix, a reviewed tag, and package visibility approval. For local development, use `docker build` rather than relying on an existing GHCR image.
+
 ## Building
 
 ```bash
