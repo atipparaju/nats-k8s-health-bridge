@@ -45,11 +45,11 @@ func New(cfg *config.Config, logger *slog.Logger) (*Client, error) {
 		nats.MaxReconnects(cfg.NATS.MaxReconnects),
 		nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
 			if err != nil {
-				logger.Warn("NATS disconnected", "error", err)
+				logger.Warn("NATS disconnected", "error", safeNATSError(err))
 			}
 		}),
 		nats.ReconnectHandler(func(nc *nats.Conn) {
-			logger.Info("NATS reconnected", "url", nc.ConnectedUrl())
+			logger.Info("NATS reconnected", "endpoint", safeNATSEndpoints(nc.ConnectedUrl()))
 		}),
 		nats.ClosedHandler(func(nc *nats.Conn) {
 			logger.Info("NATS connection closed")
@@ -70,23 +70,23 @@ func New(cfg *config.Config, logger *slog.Logger) (*Client, error) {
 	} else if cfg.NATS.NKeyFile != "" {
 		opt, err := nats.NkeyOptionFromSeed(cfg.NATS.NKeyFile)
 		if err != nil {
-			return nil, fmt.Errorf("loading nkey: %w", err)
+			return nil, fmt.Errorf("loading NATS NKey: %w", safeNATSError(err))
 		}
 		opts = append(opts, opt)
 	}
 
 	nc, err := nats.Connect(cfg.NATS.URL, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("connecting to NATS at %s: %w", cfg.NATS.URL, err)
+		return nil, fmt.Errorf("connecting to NATS endpoint %s: %w", safeNATSEndpoints(cfg.NATS.URL), safeNATSError(err))
 	}
 
 	js, err := jetstream.New(nc)
 	if err != nil {
 		nc.Close()
-		return nil, fmt.Errorf("creating JetStream context: %w", err)
+		return nil, fmt.Errorf("creating JetStream context: %w", safeNATSError(err))
 	}
 
-	logger.Info("connected to NATS", "url", nc.ConnectedUrl())
+	logger.Info("connected to NATS", "endpoint", safeNATSEndpoints(nc.ConnectedUrl()))
 
 	return &Client{nc: nc, js: js, logger: logger}, nil
 }
@@ -149,12 +149,12 @@ func (c *Client) fetchConsumerInfo(ctx context.Context, stream, consumer string)
 
 	cons, err := c.js.Consumer(reqCtx, stream, consumer)
 	if err != nil {
-		return nil, fmt.Errorf("fetching consumer %s/%s: %w", stream, consumer, err)
+		return nil, fmt.Errorf("fetching consumer %s/%s: %w", stream, consumer, safeNATSError(err))
 	}
 
 	info, err := cons.Info(reqCtx)
 	if err != nil {
-		return nil, fmt.Errorf("fetching consumer info for %s/%s: %w", stream, consumer, err)
+		return nil, fmt.Errorf("fetching consumer info for %s/%s: %w", stream, consumer, safeNATSError(err))
 	}
 
 	return &ConsumerInfo{
@@ -168,6 +168,6 @@ func (c *Client) fetchConsumerInfo(ctx context.Context, stream, consumer string)
 // Close drains and closes the NATS connection gracefully.
 func (c *Client) Close() {
 	if err := c.nc.Drain(); err != nil {
-		c.logger.Warn("error draining NATS connection", "error", err)
+		c.logger.Warn("error draining NATS connection", "error", safeNATSError(err))
 	}
 }
