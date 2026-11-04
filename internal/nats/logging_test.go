@@ -83,35 +83,37 @@ func TestSafeNATSErrorUnknownCauseDoesNotExposeMessage(t *testing.T) {
 	}
 }
 
-func TestClient_ConnectionFailureDoesNotLogCredentials(t *testing.T) {
+// Startup resilience changes an offline first connect from a fatal error to
+// a disconnected client. The reconnecting-state log must still redact userinfo.
+func TestClient_InitialOfflineReconnectDoesNotLogCredentials(t *testing.T) {
 	const username = "synthetic-user"
 	const password = "synthetic-pass"
 	cfg := &config.Config{
 		NATS: config.NATSConfig{
 			URL:            "nats://" + username + ":" + password + "@127.0.0.1:1",
 			ConnectTimeout: 200 * time.Millisecond,
-			ReconnectWait:  10 * time.Millisecond,
-			MaxReconnects:  0,
+			ReconnectWait:  50 * time.Millisecond,
+			MaxReconnects:  -1,
 		},
 	}
 	var logs bytes.Buffer
 	logger := slog.New(slog.NewTextHandler(&logs, nil))
 	client, err := New(cfg, logger)
-	if client != nil {
+	if err != nil {
+		t.Fatalf("unavailable NATS should start a reconnecting client: %v", err)
+	}
+	if client.IsConnected() {
 		client.Close()
-		t.Fatal("unexpected connection to closed local test port")
+		t.Fatal("offline endpoint must not appear connected")
 	}
-	if err == nil {
-		t.Fatal("expected connection failure")
-	}
-	for _, output := range []string{err.Error(), logs.String()} {
-		for _, sensitive := range []string{username, password, username + ":" + password} {
-			if strings.Contains(output, sensitive) {
-				t.Fatalf("credential %q appeared in diagnostic output", sensitive)
-			}
+	client.Close()
+	output := logs.String()
+	for _, sensitive := range []string{username, password, username + ":" + password} {
+		if strings.Contains(output, sensitive) {
+			t.Fatalf("credential %q appeared in diagnostics", sensitive)
 		}
 	}
-	if !strings.Contains(err.Error(), "127.0.0.1:1") {
-		t.Fatalf("sanitized connection error lost endpoint host: %v", err)
+	if !strings.Contains(output, "127.0.0.1:1") {
+		t.Fatalf("sanitized reconnecting-state log lost endpoint metadata: %q", output)
 	}
 }
