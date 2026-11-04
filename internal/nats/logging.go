@@ -37,7 +37,7 @@ func safeNATSEndpoints(raw string) string {
             endpoint = "nats://" + endpoint
         }
         parsed, err := url.Parse(endpoint)
-        if err != nil || parsed.Host == "" || strings.ContainsAny(parsed.Host, "@/?#\\\r\n\t ") {
+        if err != nil || parsed.Host == "" || strings.ContainsAny(parsed.Host, "@/?# ") {
             sanitized = append(sanitized, hidden)
             continue
         }
