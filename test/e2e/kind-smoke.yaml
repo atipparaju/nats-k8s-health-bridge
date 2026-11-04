@@ -3,7 +3,9 @@ kind: Deployment
 metadata:
   name: nats
 spec:
-  replicas: 1
+  # Begin with NATS intentionally unavailable to prove cold-start resilience.
+  # The smoke script scales it up after the bridge has passed /healthz.
+  replicas: 0
   selector:
     matchLabels: {app: nats}
   template:
