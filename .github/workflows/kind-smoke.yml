@@ -3,6 +3,10 @@ name: Kubernetes Smoke Test
 on:
   pull_request:
     branches: [main]
+  # Post-merge coverage catches bypass/direct-push regressions. Required PR
+  # status enforcement is configured separately in GitHub branch rulesets.
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
