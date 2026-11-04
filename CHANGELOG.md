@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Keep bridge HTTP probes live when NATS is unavailable during initial startup; reconnect with the existing client retry policy and verify recovery in Kind.
 - Redact NATS URL userinfo, passwords, tokens, paths and query parameters from connection and reconnect logs and errors; retain safe host metadata and typed error handling.
 - Explicitly bind environment-only NATS credentials/NKey and TLS file-path configuration; reject mutually exclusive auth files and incomplete client certificate pairs before connecting.
 - Reconciled maintainer documentation with actual health, redelivery, authorization and evaluator behavior.
