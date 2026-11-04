@@ -117,6 +117,8 @@ Go module minimum version: **1.24** (see `go.mod`; CI/toolchain pins may be newe
 
 ## Key API Details
 
+**Connection-log security invariant:** Never write raw configured NATS URLs, `ConnectedUrl()`, or unfiltered transport errors to logs or HTTP diagnostics. Use `safeNATSEndpoints` and `safeNATSError` for host-only metadata and categorized errors; preserve `errors.Is` via wrapping. Add synthetic credential-leak tests for any new connection lifecycle path.
+
 ### NATS JetStream (nats.go v1.49.0)
 
 The project uses the **new JetStream API** (not the legacy `nc.JetStream()` context):
