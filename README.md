@@ -126,6 +126,14 @@ The application and bridge use separate NATS connections, even if they share a m
 
 See [`config.yaml`](config.yaml) for a fully annotated example.
 
+### NATS cold-start resilience
+
+The bridge does **not** need NATS to be available when its pod starts. The Go NATS client uses `RetryOnFailedConnect(true)`; when the initial server pool is unavailable, the connection enters the background reconnect loop instead of making the sidecar exit. During that interval `/healthz` returns 200 for a responsive bridge process, `/readyz` returns 503, and consumer observations remain unknown. Once the connection becomes available, normal polling and readiness recover automatically without a pod restart.
+
+The initial retry uses the existing `nats.reconnect_wait` and `nats.max_reconnects` configuration. Keep `max_reconnects: -1` (the default) for unlimited retries throughout prolonged outages; a finite retry budget can be exhausted, leaving the bridge unready until restarted. Genuine configuration errors, invalid credentials or unreadable TLS files are **not** suppressed; only transient server unavailability is handled through reconnection. Shutdown closes even a never-connected client to stop background retries.
+
+The Kind smoke test intentionally starts the bridge while NATS has zero replicas, then starts NATS and verifies readiness recovery and stable restart counts. This is a single-node functional test, not a full multi-node availability benchmark.
+
 ### Consumer-info retries
 
 The bridge retries transient JetStream consumer-info errors (up to two retries with backoff), but returns immediately on typed missing-stream, missing-consumer, authorization and cancellation errors. The next periodic poll still rechecks missing resources, so a subsequently created consumer can recover without restarting the bridge. Per-request timeouts remain retryable when the parent cycle context is still valid. This avoids unnecessary delays for permanent errors.
