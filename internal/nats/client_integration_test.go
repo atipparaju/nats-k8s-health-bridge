@@ -36,7 +36,7 @@ func setupTestStream(t *testing.T) (jetstream.JetStream, func()) {
 
 	nc, err := nats.Connect(natsURL())
 	if err != nil {
-		t.Skipf("NATS not available at %s: %v", natsURL(), err)
+		t.Skipf("NATS endpoint %s unavailable: %v", safeNATSEndpoints(natsURL()), safeNATSError(err))
 	}
 
 	js, err := jetstream.New(nc)
