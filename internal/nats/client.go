@@ -41,6 +41,9 @@ func New(cfg *config.Config, logger *slog.Logger) (*Client, error) {
 	opts := []nats.Option{
 		nats.Name("nats-k8s-health-bridge"),
 		nats.Timeout(cfg.NATS.ConnectTimeout),
+		// An unavailable NATS server must not prevent the HTTP liveness probe
+		// from starting. The client reconnects using the configured wait/limit.
+		nats.RetryOnFailedConnect(true),
 		nats.ReconnectWait(cfg.NATS.ReconnectWait),
 		nats.MaxReconnects(cfg.NATS.MaxReconnects),
 		nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
@@ -86,7 +89,12 @@ func New(cfg *config.Config, logger *slog.Logger) (*Client, error) {
 		return nil, fmt.Errorf("creating JetStream context: %w", safeNATSError(err))
 	}
 
-	logger.Info("connected to NATS", "endpoint", safeNATSEndpoints(nc.ConnectedUrl()))
+	if nc.IsConnected() {
+		logger.Info("connected to NATS", "endpoint", safeNATSEndpoints(nc.ConnectedUrl()))
+	} else {
+		logger.Warn("NATS unavailable at startup; reconnecting in background",
+			"endpoint", safeNATSEndpoints(cfg.NATS.URL))
+	}
 
 	return &Client{nc: nc, js: js, logger: logger}, nil
 }
@@ -168,6 +176,11 @@ func (c *Client) fetchConsumerInfo(ctx context.Context, stream, consumer string)
 // Close drains and closes the NATS connection gracefully.
 func (c *Client) Close() {
 	if err := c.nc.Drain(); err != nil {
-		c.logger.Warn("error draining NATS connection", "error", safeNATSError(err))
+		// Drain may reject a connection that has not yet connected. Explicitly
+		// close it so its initial reconnect goroutine does not outlive shutdown.
+		c.nc.Close()
+		if !errors.Is(err, nats.ErrConnectionClosed) && !errors.Is(err, nats.ErrConnectionReconnecting) {
+			c.logger.Warn("error draining NATS connection", "error", safeNATSError(err))
+		}
 	}
 }

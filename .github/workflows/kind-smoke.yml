@@ -38,7 +38,8 @@ jobs:
       - name: Deploy NATS and bridge
         run: |
           kubectl apply -f test/e2e/kind-smoke.yaml
-          kubectl rollout status deployment/nats --timeout=120s
+          # The bridge must start and remain live before any NATS pod exists.
+          test "$(kubectl get deployment/nats -o jsonpath='{.spec.replicas}')" = "0"
           kubectl rollout status deployment/health-bridge --timeout=120s
       - name: Verify probes and diagnostics
         run: bash test/e2e/kind-smoke.sh
