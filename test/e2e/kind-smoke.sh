@@ -57,13 +57,29 @@ send_heartbeat() {
     grep -q '"accepted"'
 }
 
-echo "1. Check initial missing-consumer behavior and process liveness"
+# Look up the bridge by container name, not by array position: the pod
+# contains a separate heartbeat helper whose restart count is irrelevant.
+bridge_restart_count() {
+  kubectl get pods -l app=health-bridge -o jsonpath='{.items[0].status.containerStatuses[?(@.name=="bridge")].restartCount}'
+}
+
+echo "1. Check bridge cold-start liveness with NATS deliberately absent"
+test "$(kubectl get deployment/nats -o jsonpath='{.spec.replicas}')" = "0"
 assert_code 200 http://127.0.0.1:18080/healthz
 assert_code 503 http://127.0.0.1:18080/readyz
 assert_code 200 http://127.0.0.1:18080/status
 assert_code 200 http://127.0.0.1:18080/metrics
+curl -fsS http://127.0.0.1:18080/status | grep -q '"nats_connected":false'
+cold_start_restarts=$(bridge_restart_count)
+sleep 5
+if [[ "$(bridge_restart_count)" != "$cold_start_restarts" ]]; then
+  echo "Bridge restarted while NATS was unavailable at startup"
+  exit 1
+fi
 
-echo "2. Seed real stream/consumer; verify heartbeat is required"
+echo "2. Start NATS after the bridge, then seed real consumer"
+kubectl scale deployment/nats --replicas=1
+kubectl rollout status deployment/nats --timeout=120s
 start_nats_forward
 sleep 2
 seed_consumer
@@ -73,13 +89,14 @@ curl -fsS http://127.0.0.1:18080/status | grep -q 'processing heartbeat missing 
 echo "3. Heartbeat restores healthy readiness"
 send_heartbeat
 wait_code 200 http://127.0.0.1:18080/readyz
+curl -fsS http://127.0.0.1:18080/status | grep -q '"nats_connected":true'
 curl -fsS http://127.0.0.1:18080/status | grep -q '"status":"healthy"'
 
 echo "4. Heartbeat expiration fails readiness without restarting bridge"
 sleep 17
 wait_code 503 http://127.0.0.1:18080/readyz
 curl -fsS http://127.0.0.1:18080/status | grep -q 'processing heartbeat missing or expired'
-before=$(kubectl get pod -l app=health-bridge -o jsonpath='{.items[0].status.containerStatuses[0].restartCount}')
+before=$(bridge_restart_count)
 
 echo "5. Stop NATS and validate liveness/readiness separation"
 kubectl scale deployment/nats --replicas=0
@@ -87,7 +104,7 @@ kubectl rollout status deployment/nats --timeout=60s
 sleep 5
 assert_code 200 http://127.0.0.1:18080/healthz
 assert_code 503 http://127.0.0.1:18080/readyz
-after=$(kubectl get pod -l app=health-bridge -o jsonpath='{.items[0].status.containerStatuses[0].restartCount}')
+after=$(bridge_restart_count)
 if [[ "$after" != "$before" ]]; then
   echo "Bridge restarted during NATS outage: before=$before after=$after"
   exit 1
