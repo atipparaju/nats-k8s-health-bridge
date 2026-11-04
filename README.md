@@ -105,6 +105,12 @@ Configuration is loaded from a YAML file with **environment variable overrides**
 | `NKHB_NATS_CONNECT_TIMEOUT` | `nats.connect_timeout` | `5s` | Initial connection timeout |
 | `NKHB_NATS_MAX_RECONNECTS` | `nats.max_reconnects` | `-1` | `-1` = infinite |
 
+### Credential-safe NATS connection diagnostics
+
+The bridge logs **sanitized NATS host:port endpoints** rather than raw NATS URLs on initial connection and reconnect. Credentials, URL-encoded userinfo, token-style usernames, URL paths and query parameters are omitted. Connection errors report a safe category such as server unavailable, authorization failure, or timeout. They do not include raw NATS transport error text because it may contain connection credentials. Wrapped errors retain typed `errors.Is` behavior for code handling. Consumer metadata errors surfaced through `/status` are likewise protected.
+
+Use an authenticated Secret mount and restrict diagnostic endpoints; sanitization is defense in depth, not a reason to put real passwords in URLs or enable verbose logs on untrusted networks.
+
 ### NATS credential and TLS configuration
 
 NATS credentials and TLS settings may be provided in YAML or through the `NKHB_NATS_*` environment variables listed above. **Environment-only values are supported**, including Kubernetes Secret-mounted file paths; when both YAML and an environment value are present, the environment value wins.
