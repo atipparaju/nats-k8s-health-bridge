@@ -117,6 +117,8 @@ Go module minimum version: **1.24** (see `go.mod`; CI/toolchain pins may be newe
 
 ## Key API Details
 
+**Startup availability invariant:** The NATS Go client uses `RetryOnFailedConnect(true)` and must return a disconnected/reconnecting client when the initial NATS pool is down. Start HTTP liveness regardless, fail readiness until NATS is connected and observations succeed, and allow normal polling to recover. Keep `max_reconnects: -1` for sustained outages; finite limits can exhaust. Explicitly close reconnecting connections during shutdown. Kind tests intentionally start with NATS replicas at zero.
+
 **Connection-log security invariant:** Never write raw configured NATS URLs, `ConnectedUrl()`, or unfiltered transport errors to logs or HTTP diagnostics. Use `safeNATSEndpoints` and `safeNATSError` for host-only metadata and categorized errors; preserve `errors.Is` via wrapping. Add synthetic credential-leak tests for any new connection lifecycle path.
 
 ### NATS JetStream (nats.go v1.49.0)
