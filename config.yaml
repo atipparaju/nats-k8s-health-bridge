@@ -57,6 +57,9 @@ nats:
   connect_timeout: 5s
   # Wait between reconnect attempts
   reconnect_wait: 2s
+  # Initial connect also enters the reconnect loop if NATS is offline.
+  # A finite retry cap can be exhausted during long outages; use -1 for services
+  # that must automatically recover without a pod restart.
   # Max reconnect attempts (-1 = infinite)
   max_reconnects: -1
 
