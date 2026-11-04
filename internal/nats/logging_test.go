@@ -14,12 +14,32 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/atipparaju/nats-k8s-health-bridge/internal/config"
 	natsgo "github.com/nats-io/nats.go"
 )
+
+// Async NATS connection callbacks may log after Close returns. The collector
+// must synchronize reads with those callback writes under -race.
+type synchronizedLogBuffer struct {
+	mu sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *synchronizedLogBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *synchronizedLogBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
+}
 
 func TestSafeNATSEndpoints(t *testing.T) {
 	tests := []struct {
@@ -96,7 +116,7 @@ func TestClient_InitialOfflineReconnectDoesNotLogCredentials(t *testing.T) {
 			MaxReconnects:  -1,
 		},
 	}
-	var logs bytes.Buffer
+	var logs synchronizedLogBuffer
 	logger := slog.New(slog.NewTextHandler(&logs, nil))
 	client, err := New(cfg, logger)
 	if err != nil {
