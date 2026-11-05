@@ -1,11 +1,10 @@
 BINARY        := nats-k8s-health-bridge
 MODULE        := github.com/atipparaju/nats-k8s-health-bridge
 VERSION       := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-IMAGE_REPO    := ghcr.io/atipparaju/nats-k8s-health-bridge
-IMAGE_TAG     := $(VERSION)
+IMAGE_LOCAL   := nats-k8s-health-bridge:local
 GOFLAGS       := -ldflags="-s -w -X main.version=$(VERSION)" -trimpath
 
-.PHONY: all build test lint clean docker-build docker-push run-local helm-lint fmt vet tidy
+.PHONY: all build test lint clean docker-build release-dry-run run-local helm-lint fmt vet tidy
 
 all: build
 
@@ -37,18 +36,13 @@ tidy:
 clean:
 	rm -rf bin/
 
-## docker-build: build the Docker image
+## docker-build: build a local-only image (never tags or pushes GHCR)
 docker-build:
-	docker build \
-		--build-arg VERSION=$(VERSION) \
-		-t $(IMAGE_REPO):$(IMAGE_TAG) \
-		-t $(IMAGE_REPO):latest \
-		.
+	docker build --tag $(IMAGE_LOCAL) .
 
-## docker-push: push the Docker image to GHCR
-docker-push: docker-build
-	docker push $(IMAGE_REPO):$(IMAGE_TAG)
-	docker push $(IMAGE_REPO):latest
+## release-dry-run: verify release safeguards without Docker, credentials or network access
+release-dry-run:
+	python3 scripts/check_release_safety.py
 
 ## run-local: run the sidecar locally against a local NATS server
 ## Requires: docker run -p 4222:4222 -p 8222:8222 nats:2.15.1-alpine3.22 -js
