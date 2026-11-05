@@ -294,9 +294,11 @@ make run-local
 # Build Docker image
 make docker-build
 
-# Push Docker image to GHCR — restricted to explicitly approved release operations
-# DO NOT run without owner approval, package visibility review and successful CI.
-# make docker-push
+# Check the tag-scoped release safeguards offline (no registry writes)
+make release-dry-run
+
+# No local make target can publish to GHCR. See docs/release-publishing.md
+# for the separate owner-approved manual GitHub Actions workflow.
 ```
 
 ---
