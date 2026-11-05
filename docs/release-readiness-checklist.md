@@ -53,7 +53,7 @@ The findings above are **potential risks and confirmed process/code gaps**, not 
 - [ ] Reconcile `SECURITY.md` supported versions, `CHANGELOG.md`, Helm `appVersion`, unavailable `v0.1.0` public release and GitHub license detection — [#44](https://github.com/atipparaju/nats-k8s-health-bridge/issues/44).
 - [ ] Remove assumptions that a private/unpublished GHCR image is pullable as `:latest` — [#43](https://github.com/atipparaju/nats-k8s-health-bridge/issues/43).
 - [ ] Verify full Docker quickstart in **PowerShell 7+ on Windows** and **Bash on Linux**, including shell quoting, bind mount, authorized diagnostics and cleanup — [#47](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47).
-- [ ] Archive or replace `setup.sh` and stale release comments — [#45](https://github.com/atipparaju/nats-k8s-health-bridge/issues/45).
+- [ ] Remove `setup.sh`, local GHCR push commands and stale release comments; verify the offline dry-run — [#45](https://github.com/atipparaju/nats-k8s-health-bridge/issues/45), [publication safety procedure](release-publishing.md). Pending PR merge and owner approval.
 - [ ] Consistently apply `gofmt` and enforce formatting in CI — [#46](https://github.com/atipparaju/nats-k8s-health-bridge/issues/46).
 - [ ] Correct inaccurate/misattached comments (notably `IsReady` vs `RecordHeartbeat` in `checker.go`; /healthz comment in `server.go`) — [#46](https://github.com/atipparaju/nats-k8s-health-bridge/issues/46).
 - [ ] Comment **why** the worker pool is bounded, why observations become stale, why heartbeat is a readiness-only signal, and why a NATS outage does not fail liveness — [#46](https://github.com/atipparaju/nats-k8s-health-bridge/issues/46).

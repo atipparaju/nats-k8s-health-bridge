@@ -25,6 +25,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Static, offline guard against accidental image publishing paths.
+      - name: Verify release safeguards
+        run: python3 scripts/check_release_safety.py
+
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
@@ -111,10 +115,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # Release-specific tags only; avoid floating branch/latest/major.minor tags.
           tags: |
-            type=ref,event=branch
             type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-
 
       - name: Build and push Docker image
