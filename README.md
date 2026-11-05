@@ -230,7 +230,7 @@ The consumer threshold evaluator is isolated behind a `ConsumerEvaluator` interf
 
 The CI workflow does **not** automatically publish GHCR images on pushes to `main` or version tags. Publishing requires a manual GitHub Actions **CI → Run workflow** invocation against a `v*` tag reference with the `publish_image` boolean explicitly selected. PR and normal push workflows continue to run tests but skip the publication job. Before publishing, verify the linked GHCR package's visibility independently in GitHub Packages; a private source repository does not guarantee that its associated container packages are private. This project deliberately does not modify package visibility settings automatically.
 
-Do not select the publish option before code review, a green test matrix, a reviewed tag, and package visibility approval. For local development, use `docker build` rather than relying on an existing GHCR image.
+Do not select the publish option before code review, a green test matrix, a reviewed tag, package visibility review, and explicit approval. The former `make docker-push` and `setup.sh` paths have been removed: `make docker-build` builds only `nats-k8s-health-bridge:local`, and `make release-dry-run` checks publication guardrails offline without using Docker or contacting a registry. The approved release workflow emits full-version and commit-specific tags (no `latest` or floating major/minor tag). See [release publishing safety](docs/release-publishing.md).
 
 ### Maintainer architecture reference
 
@@ -245,8 +245,11 @@ make build
 # Run tests
 make test
 
-# Build Docker image
+# Build a local Docker image (not GHCR)
 make docker-build
+
+# Verify release safeguards without publishing
+make release-dry-run
 
 # Run locally (requires NATS running on localhost:4222)
 make run-local
