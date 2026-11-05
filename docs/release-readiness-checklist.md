@@ -64,8 +64,8 @@ The findings above are **potential risks and confirmed process/code gaps**, not 
 
 ## 4. Release supply chain and repository settings
 
-- [ ] Require named PR checks for Test & Lint, Integration Test, Container vulnerability gate, and Kind / Probe Smoke in default-branch rules, with appropriate administrator exceptions — [#42](https://github.com/atipparaju/nats-k8s-health-bridge/issues/42).
-- [ ] Confirm GHCR image/package visibility **in GitHub's own package settings**; do not infer it from repository privacy — [#42](https://github.com/atipparaju/nats-k8s-health-bridge/issues/42).
+- [ ] Require named PR checks for Test & Lint, Integration Test, Container vulnerability gate, and Kind / Probe Smoke in default-branch rules, with appropriate administrator exceptions — [#42](https://github.com/atipparaju/nats-k8s-health-bridge/issues/42). See [repository ruleset and GHCR verification runbook](repository-security-controls.md). **Owner-admin settings verification still pending; an empty required-checks rule does not enforce green CI.**
+- [ ] Confirm GHCR image/package visibility **in GitHub's own package settings**; do not infer it from repository privacy — [#42](https://github.com/atipparaju/nats-k8s-health-bridge/issues/42). If the container package does not exist, record **not published**, rather than creating one solely for validation.
 - [ ] Ensure manual release/tag approval and image publication stay separate from routine CI — [#45](https://github.com/atipparaju/nats-k8s-health-bridge/issues/45).
 - [ ] Review upstream container image digests, build provenance and provenance metadata for Linux amd64 and arm64 — [#47](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47).
 - [ ] Obtain an SBOM and verify license compatibility/attributions; run dependency, container and Git history secret scans — [#47](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47).
