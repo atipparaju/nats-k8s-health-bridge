@@ -31,48 +31,23 @@ The corresponding configuration is [examples/docker/bridge-config.yaml](examples
 
 ### Kubernetes sidecar injection
 
-Add this to your existing pod template:
+The Helm chart currently renders a **ConfigMap and a non-deploying sidecar
+example only**: it does not install a workload or create Secrets. The example
+defaults to a **locally built and preloaded** image
+`nats-k8s-health-bridge:local` with `imagePullPolicy: Never`; do not assume
+an existing or public GHCR `:latest` image. To inspect the sample:
 
-```yaml
-containers:
-  - name: your-consumer
-    image: your-image:tag
-    # ... your existing config
-
-  - name: nats-health-bridge
-    image: ghcr.io/atipparaju/nats-k8s-health-bridge:latest
-    args: ["--config", "/etc/nats-health-bridge/config.yaml"]
-    ports:
-      - containerPort: 8080
-        name: health
-    volumeMounts:
-      - name: health-bridge-config
-        mountPath: /etc/nats-health-bridge
-    livenessProbe:
-      httpGet:
-        path: /healthz
-        port: health
-      initialDelaySeconds: 5
-      periodSeconds: 10
-    readinessProbe:
-      httpGet:
-        path: /readyz
-        port: health
-      initialDelaySeconds: 10
-      periodSeconds: 10
-    resources:
-      requests:
-        cpu: 10m
-        memory: 32Mi
-      limits:
-        cpu: 100m
-        memory: 64Mi
-
-volumes:
-  - name: health-bridge-config
-    configMap:
-      name: my-health-bridge-config
+```sh
+make docker-build
+helm template bridge helm/nats-k8s-health-bridge
+python3 scripts/test_helm_templates.py
 ```
+
+Copy the generated `sidecar-example.yaml` container and volumes into your
+own Pod template after review. See [Helm sidecar and Secret integration](docs/helm-sidecar.md)
+for credentials/NKey/TLS mounts, diagnostic tokens, probes, secure defaults,
+resource sizing and limitations. This example does **not** publish an image.
+
 
 ## Configuration
 

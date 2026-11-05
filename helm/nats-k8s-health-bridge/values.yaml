@@ -1,33 +1,33 @@
+# This chart renders configuration plus a non-deploying sidecar example, NOT a Deployment.
+# Build/load an approved image locally before using this example.
+# Never assume a GHCR package exists or is publicly pullable.
 image:
-  repository: ghcr.io/atipparaju/nats-k8s-health-bridge
-  tag: latest
-  pullPolicy: IfNotPresent
+  repository: nats-k8s-health-bridge
+  tag: local
+  pullPolicy: Never # For a locally preloaded image. Use IfNotPresent for a verified published digest.
 
-# Port the sidecar listens on
 port: 8080
 pollInterval: 10s
 pollTimeout: 8s
 maxObservationAge: 30s
+
 server:
   bindAddress: 0.0.0.0
   readinessFailOnDegraded: false
-  allowUnauthenticatedDiagnostics: false # Only enable in isolated development environments
-  # Reference existing Kubernetes Secrets; never place tokens in values.yaml.
+  allowUnauthenticatedDiagnostics: false
+  # Optional existing Secrets with a "token" key. Empty = no env var.
   metricsTokenSecret: ""
   statusTokenSecret: ""
-# HTTP endpoint security: configure matching values in the mounted bridge config.
-# Kubernetes HTTP probes normally require a pod-reachable bind address.
-# Use Kubernetes Secrets for diagnostic bearer tokens, not values.yaml.
-# Apply NetworkPolicies and avoid exposing the sidecar through public Services.
 
-
-# NATS connection
 nats:
   url: nats://nats:4222
-  credentialsSecret: ""   # K8s secret name containing user.creds
-  tlsSecret: ""           # K8s secret name containing tls.crt, tls.key, ca.crt
+  # Existing Secret with "user.creds"; alternatively use nkeySecret with "user.nkey".
+  credentialsSecret: ""
+  nkeySecret: ""
+  # Existing TLS Secret with "ca.crt"; optionally "tls.crt"/"tls.key".
+  tlsSecret: ""
+  tlsClientAuth: false # true requires tlsSecret with tls.crt and tls.key
 
-# Consumers to monitor (mirrors config.yaml consumers[])
 consumers: []
 # - name: order-processor
 #   stream: ORDERS
@@ -37,7 +37,6 @@ consumers: []
 #     maxLag: 1000
 #     maxAckPending: 500
 
-# Resources for the sidecar container
 resources:
   requests:
     cpu: 10m
@@ -46,7 +45,6 @@ resources:
     cpu: 100m
     memory: 64Mi
 
-# Liveness and readiness probe config
 probes:
   liveness:
     initialDelaySeconds: 5
