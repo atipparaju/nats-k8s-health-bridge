@@ -51,7 +51,7 @@ The findings above are **potential risks and confirmed process/code gaps**, not 
 
 - [x] Update NATS's maturity badge and clarify independent project status in the README — [#38](https://github.com/atipparaju/nats-k8s-health-bridge/issues/38) (documentation PR).
 - [ ] Reconcile `SECURITY.md` supported versions, `CHANGELOG.md`, Helm `appVersion`, unavailable `v0.1.0` public release and GitHub license detection — [#44](https://github.com/atipparaju/nats-k8s-health-bridge/issues/44).
-- [ ] Remove assumptions that a private/unpublished GHCR image is pullable as `:latest` — [#43](https://github.com/atipparaju/nats-k8s-health-bridge/issues/43).
+- [ ] Replace GHCR floating image assumptions and validate optional NATS/TLS/diagnostic Secret wiring in a rendered, non-deploying sidecar example — [#43](https://github.com/atipparaju/nats-k8s-health-bridge/issues/43), [Helm sidecar documentation](helm-sidecar.md). Pending PR review/merge.
 - [ ] Verify full Docker quickstart in **PowerShell 7+ on Windows** and **Bash on Linux**, including shell quoting, bind mount, authorized diagnostics and cleanup — [#47](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47).
 - [ ] Remove `setup.sh`, local GHCR push commands and stale release comments; verify the offline dry-run — [#45](https://github.com/atipparaju/nats-k8s-health-bridge/issues/45), [publication safety procedure](release-publishing.md). Pending PR merge and owner approval.
 - [ ] Consistently apply `gofmt` and enforce formatting in CI — [#46](https://github.com/atipparaju/nats-k8s-health-bridge/issues/46).

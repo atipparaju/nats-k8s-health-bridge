@@ -17,7 +17,7 @@ data:
       allow_unauthenticated_diagnostics: {{ .Values.server.allowUnauthenticatedDiagnostics }}
       shutdown_timeout: 10s
     nats:
-      url: {{ .Values.nats.url }}
+      url: {{ .Values.nats.url | quote }}
       connect_timeout: 5s
       reconnect_wait: 2s
       max_reconnects: -1
@@ -25,53 +25,13 @@ data:
     {{- range .Values.consumers }}
     {{- $thresholds := .thresholds | default dict }}
       - name: {{ .name }}
-        stream: {{ .stream }}
-        consumer: {{ .consumer }}
+        stream: {{ .stream | quote }}
+        consumer: {{ .consumer | quote }}
         heartbeat_timeout: {{ .heartbeatTimeout | default "0s" | quote }}
         thresholds:
           max_lag: {{ get $thresholds "maxLag" | default 0 }}
           max_ack_pending: {{ get $thresholds "maxAckPending" | default 0 }}
     {{- end }}
----
-# Example: how to inject this as a sidecar into your own Deployment
-# Add this container spec to your existing pod template:
-#
-# containers:
-#   - name: nats-health-bridge
-#     image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
-#     args: ["--config", "/etc/nats-health-bridge/config.yaml"]
-#     env:
-#       - name: NKHB_SERVER_METRICS_TOKEN
-#         valueFrom:
-#           secretKeyRef:
-#             name: {{ .Values.server.metricsTokenSecret | default "replace-with-metrics-secret" }}
-#             key: token
-#       - name: NKHB_SERVER_STATUS_TOKEN
-#         valueFrom:
-#           secretKeyRef:
-#             name: {{ .Values.server.statusTokenSecret | default "replace-with-status-secret" }}
-#             key: token
-#     ports:
-#       - containerPort: {{ .Values.port }}
-#         name: health
-#     volumeMounts:
-#       - name: nats-health-bridge-config
-#         mountPath: /etc/nats-health-bridge
-#     livenessProbe:
-#       httpGet:
-#         path: /healthz
-#         port: health
-#       initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
-#       periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
-#     readinessProbe:
-#       httpGet:
-#         path: /readyz
-#         port: health
-#       initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
-#       periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
-#     resources:
-#       {{- toYaml .Values.resources | nindent 6 }}
-# volumes:
-#   - name: nats-health-bridge-config
-#     configMap:
-#       name: {{ include "nats-k8s-health-bridge.fullname" . }}
+    # This is documentation data only, not a Deployment or Pod.
+  sidecar-example.yaml: |
+{{ include "nkhb.sidecarExample" . | indent 4 }}
