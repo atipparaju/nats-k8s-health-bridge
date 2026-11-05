@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![NATS project maturity](https://img.shields.io/badge/NATS-CNCF%20Graduated-blue)](https://www.cncf.io/projects/nats/)
 
-NATS graduated in the CNCF on **November 2, 2026**. This maturity designation refers to NATS itself, not to this independently maintained bridge. See the [release-readiness checklist](docs/release-readiness-checklist.md) before considering public distribution.
+NATS graduated in the CNCF on **November 2, 2026**. This maturity designation refers to NATS itself, not to this independently maintained bridge. The bridge remains an **unreleased private development project**. Its historical 0.1.0 entry does not imply a public release or package. See [release history and compatibility](docs/release-versioning.md) and the [release-readiness checklist](docs/release-readiness-checklist.md).
 
 ## What it does
 

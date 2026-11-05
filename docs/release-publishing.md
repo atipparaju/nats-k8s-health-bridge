@@ -23,6 +23,8 @@ The dry-run uses Python 3 standard library and checks that:
 
 **This is a static/offline safety test, not an execution of GitHub's authorization system or a proof that every possible contributor or credential cannot push packages.** Review GitHub settings and Actions permissions separately.
 
+The historical chart version is not an application release; see [release versioning and provenance](release-versioning.md).
+
 ## Owner-approved release procedure (future only)
 
 Before taking any publication action:
