@@ -86,7 +86,7 @@ jobs:
               commit = str(item.get("Commit", ""))[:12]
               line = int(item.get("StartLine", 0) or 0)
               candidate = str(item.get("Match", ""))
-              variable_reference = bool(re.search(r"\\$\\{?[A-Z_][A-Z0-9_]*\\}?", candidate))
+              variable_reference = any(marker in candidate for marker in ("$NKHB_", "${NKHB_"))
               print("Candidate location: commit", commit, "line", line,
                     "contains_env_reference", variable_reference)
           PY
