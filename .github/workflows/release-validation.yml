@@ -60,12 +60,28 @@ jobs:
           # Keep scanner output strictly inside the runner. Even redacted findings
           # can contain sensitive paths and context; do not echo or upload them.
           output="$(mktemp)"
-          trap 'rm -f "$output"' EXIT
+          report_dir="$(mktemp -d)"
+          trap 'rm -f "$output"; rm -rf "$report_dir"' EXIT
           status=0
-          docker run --rm --network none -v "$PWD:/repo:ro" -w /repo \
+          docker run --rm --network none --user "$(id -u):$(id -g)" \
+            -v "$PWD:/repo:ro" -v "$report_dir:/results" -w /repo \
             -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/repo \
             ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
-            git --redact=100 --no-banner --log-opts="--all" /repo >"$output" 2>&1 || status=$?
+            git --redact=100 --no-banner --log-opts="--all" \
+            --report-format=json --report-path=/results/findings.json /repo >"$output" 2>&1 || status=$?
+          # Only a count and detector categories may be printed. Never expose
+          # potential credentials, matches, paths, author metadata, or commits.
+          if [ -s "$report_dir/findings.json" ]; then
+            python3 - "$report_dir/findings.json" <<'PY'
+          import collections, json, sys
+          with open(sys.argv[1], encoding="utf-8") as f:
+              matches = json.load(f)
+          print("Candidate secret findings:", len(matches))
+          summary = collections.Counter(item.get("RuleID", "unknown") for item in matches)
+          for name, count in sorted(summary.items()):
+              print("Detector category:", name, "count:", count)
+          PY
+          fi
           if [ "$status" -ne 0 ]; then
             if grep -iq 'detected dubious ownership' "$output"; then
               echo "FAIL: Git safe-directory trust error in scanner; investigate the read-only mount." >&2
