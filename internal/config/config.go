@@ -21,26 +21,26 @@ import (
 
 // Config is the root configuration structure.
 type Config struct {
-	LogLevel  string        `mapstructure:"log_level"`
-	PollInterval time.Duration `mapstructure:"poll_interval"`
-	PollTimeout  time.Duration `mapstructure:"poll_timeout"`
-	MaxObservationAge time.Duration `mapstructure:"max_observation_age"`
-	Server    ServerConfig  `mapstructure:"server"`
-	NATS      NATSConfig    `mapstructure:"nats"`
-	Consumers []ConsumerConfig `mapstructure:"consumers"`
+	LogLevel          string           `mapstructure:"log_level"`
+	PollInterval      time.Duration    `mapstructure:"poll_interval"`
+	PollTimeout       time.Duration    `mapstructure:"poll_timeout"`
+	MaxObservationAge time.Duration    `mapstructure:"max_observation_age"`
+	Server            ServerConfig     `mapstructure:"server"`
+	NATS              NATSConfig       `mapstructure:"nats"`
+	Consumers         []ConsumerConfig `mapstructure:"consumers"`
 }
 
 // ServerConfig holds HTTP server settings.
 type ServerConfig struct {
 	// ReadinessFailOnDegraded opts into removing a pod from service on consumer threshold breaches.
 	// By default, degradation is observable but does not fail Kubernetes readiness.
-	ReadinessFailOnDegraded bool `mapstructure:"readiness_fail_on_degraded"`
-	Port            int           `mapstructure:"port"`
-	BindAddress string `mapstructure:"bind_address"`
-	MetricsToken string `mapstructure:"metrics_token"`
-	StatusToken string `mapstructure:"status_token"`
-	AllowUnauthenticatedDiagnostics bool `mapstructure:"allow_unauthenticated_diagnostics"`
-	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
+	ReadinessFailOnDegraded         bool          `mapstructure:"readiness_fail_on_degraded"`
+	Port                            int           `mapstructure:"port"`
+	BindAddress                     string        `mapstructure:"bind_address"`
+	MetricsToken                    string        `mapstructure:"metrics_token"`
+	StatusToken                     string        `mapstructure:"status_token"`
+	AllowUnauthenticatedDiagnostics bool          `mapstructure:"allow_unauthenticated_diagnostics"`
+	ShutdownTimeout                 time.Duration `mapstructure:"shutdown_timeout"`
 }
 
 // NATSConfig holds NATS connection settings.
@@ -58,17 +58,17 @@ type NATSConfig struct {
 
 // ConsumerConfig defines a single JetStream consumer to monitor.
 type ConsumerConfig struct {
-	Name       string     `mapstructure:"name"`
-	Stream     string     `mapstructure:"stream"`
-	Consumer   string     `mapstructure:"consumer"`
-	Thresholds Thresholds `mapstructure:"thresholds"`
+	Name             string        `mapstructure:"name"`
+	Stream           string        `mapstructure:"stream"`
+	Consumer         string        `mapstructure:"consumer"`
+	Thresholds       Thresholds    `mapstructure:"thresholds"`
 	HeartbeatTimeout time.Duration `mapstructure:"heartbeat_timeout"`
 }
 
 // Thresholds defines health threshold values for a consumer.
 type Thresholds struct {
-	MaxLag            uint64        `mapstructure:"max_lag"`
-	MaxAckPending     uint64        `mapstructure:"max_ack_pending"`
+	MaxLag        uint64 `mapstructure:"max_lag"`
+	MaxAckPending uint64 `mapstructure:"max_ack_pending"`
 }
 
 // Load reads configuration from a YAML file and environment variables.
@@ -150,10 +150,18 @@ func Load(cfgFile string) (*Config, error) {
 }
 
 func validate(cfg *Config) error {
-	if cfg.PollInterval <= 0 { return fmt.Errorf("poll_interval must be positive") }
-	if cfg.PollTimeout <= 0 { return fmt.Errorf("poll_timeout must be positive") }
-	if cfg.MaxObservationAge < 0 { return fmt.Errorf("max_observation_age cannot be negative") }
-	if cfg.MaxObservationAge > 0 && cfg.MaxObservationAge <= cfg.PollInterval { return fmt.Errorf("max_observation_age must exceed poll_interval") }
+	if cfg.PollInterval <= 0 {
+		return fmt.Errorf("poll_interval must be positive")
+	}
+	if cfg.PollTimeout <= 0 {
+		return fmt.Errorf("poll_timeout must be positive")
+	}
+	if cfg.MaxObservationAge < 0 {
+		return fmt.Errorf("max_observation_age cannot be negative")
+	}
+	if cfg.MaxObservationAge > 0 && cfg.MaxObservationAge <= cfg.PollInterval {
+		return fmt.Errorf("max_observation_age must exceed poll_interval")
+	}
 	if cfg.NATS.URL == "" {
 		return fmt.Errorf("nats.url is required")
 	}
@@ -164,8 +172,12 @@ func validate(cfg *Config) error {
 	if (cfg.NATS.TLSCert == "") != (cfg.NATS.TLSKey == "") {
 		return fmt.Errorf("nats.tls_cert and nats.tls_key must be configured together")
 	}
-	if cfg.Server.BindAddress == "" { return fmt.Errorf("server.bind_address must not be empty") }
-	if ip := net.ParseIP(cfg.Server.BindAddress); ip == nil { return fmt.Errorf("server.bind_address must be an IP address") }
+	if cfg.Server.BindAddress == "" {
+		return fmt.Errorf("server.bind_address must not be empty")
+	}
+	if ip := net.ParseIP(cfg.Server.BindAddress); ip == nil {
+		return fmt.Errorf("server.bind_address must be an IP address")
+	}
 	if cfg.Server.Port < 1 || cfg.Server.Port > 65535 {
 		return fmt.Errorf("server.port must be between 1 and 65535")
 	}
@@ -173,7 +185,9 @@ func validate(cfg *Config) error {
 		return fmt.Errorf("at least one consumer must be configured")
 	}
 	for i, c := range cfg.Consumers {
-		if c.HeartbeatTimeout < 0 { return fmt.Errorf("consumers[%d].heartbeat_timeout cannot be negative", i) }
+		if c.HeartbeatTimeout < 0 {
+			return fmt.Errorf("consumers[%d].heartbeat_timeout cannot be negative", i)
+		}
 		if c.Stream == "" {
 			return fmt.Errorf("consumers[%d].stream is required", i)
 		}

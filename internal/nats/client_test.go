@@ -27,7 +27,7 @@ import (
 func TestShouldRetryConsumerInfo(t *testing.T) {
 	tests := []struct {
 		name string
-		err error
+		err  error
 		want bool
 	}{
 		{"consumer not found", jetstream.ErrConsumerNotFound, false},

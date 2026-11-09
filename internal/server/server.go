@@ -15,8 +15,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
-	"strings"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -157,7 +157,9 @@ func (s *Server) Shutdown(ctx context.Context) error {
 // isLoopback rejects non-local heartbeat requests. X-Forwarded-For is not trusted.
 func isLoopback(remote string) bool {
 	host, _, err := net.SplitHostPort(remote)
-	if err != nil { return false }
+	if err != nil {
+		return false
+	}
 	ip := net.ParseIP(strings.Trim(host, "[]"))
 	return ip != nil && ip.IsLoopback()
 }
@@ -166,7 +168,9 @@ func isLoopback(remote string) bool {
 // token fails closed; anonymous access must be explicitly enabled for isolated
 // local tests. Probes remain unauthenticated for Kubernetes health checks.
 func protected(token string, allowAnonymous bool, next http.Handler) http.Handler {
-	if token == "" && allowAnonymous { return next }
+	if token == "" && allowAnonymous {
+		return next
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if token == "" {
 			w.Header().Set("WWW-Authenticate", "Bearer")

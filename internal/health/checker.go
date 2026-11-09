@@ -47,20 +47,20 @@ type ConsumerState struct {
 	NumRedelivered int       `json:"num_redelivered"`
 	LastChecked    time.Time `json:"last_checked"`
 	LastSuccessful time.Time `json:"last_successful,omitempty"`
-	LastHeartbeat time.Time `json:"last_heartbeat,omitempty"`
+	LastHeartbeat  time.Time `json:"last_heartbeat,omitempty"`
 	LastError      string    `json:"last_error,omitempty"`
 	Reasons        []string  `json:"reasons,omitempty"`
 }
 
 // Checker polls JetStream consumer info and evaluates health.
 type Checker struct {
-	client           NATSClient
-	cfg              *config.Config
-	reg              *metrics.Registry
-	evaluator        ConsumerEvaluator
-	logger           *slog.Logger
-	mu               sync.RWMutex
-	states           map[string]*ConsumerState
+	client    NATSClient
+	cfg       *config.Config
+	reg       *metrics.Registry
+	evaluator ConsumerEvaluator
+	logger    *slog.Logger
+	mu        sync.RWMutex
+	states    map[string]*ConsumerState
 }
 
 // NewChecker creates a new health checker.
@@ -75,12 +75,12 @@ func NewChecker(client NATSClient, cfg *config.Config, reg *metrics.Registry, lo
 		}
 	}
 	return &Checker{
-		client:            client,
-		cfg:               cfg,
-		reg:               reg,
-		evaluator:         LegacyEvaluator{},
-		logger:            logger,
-		states:            states,
+		client:    client,
+		cfg:       cfg,
+		reg:       reg,
+		evaluator: LegacyEvaluator{},
+		logger:    logger,
+		states:    states,
 	}
 }
 
@@ -110,42 +110,46 @@ func (c *Checker) Run(ctx context.Context) {
 const maxConcurrentPolls = 4
 
 func (c *Checker) pollAll(ctx context.Context) {
-    timeout := c.cfg.PollTimeout
-    if timeout <= 0 {
-        timeout = 8 * time.Second // for tests/programmatically created configurations
-    }
-    ctx, cancel := context.WithTimeout(ctx, timeout)
-    defer cancel()
+	timeout := c.cfg.PollTimeout
+	if timeout <= 0 {
+		timeout = 8 * time.Second // for tests/programmatically created configurations
+	}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
-    workers := len(c.cfg.Consumers)
-    if workers > maxConcurrentPolls { workers = maxConcurrentPolls }
-    jobs := make(chan config.ConsumerConfig)
-    var wg sync.WaitGroup
-    for i := 0; i < workers; i++ {
-        wg.Add(1)
-        go func() {
-            defer wg.Done()
-            for {
-                select {
-                case <-ctx.Done():
-                    return
-                case consumerCfg, ok := <-jobs:
-                    if !ok { return }
-                    c.pollOne(ctx, consumerCfg)
-                }
-            }
-        }()
-    }
+	workers := len(c.cfg.Consumers)
+	if workers > maxConcurrentPolls {
+		workers = maxConcurrentPolls
+	}
+	jobs := make(chan config.ConsumerConfig)
+	var wg sync.WaitGroup
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case consumerCfg, ok := <-jobs:
+					if !ok {
+						return
+					}
+					c.pollOne(ctx, consumerCfg)
+				}
+			}
+		}()
+	}
 dispatch:
-    for _, consumerCfg := range c.cfg.Consumers {
-        select {
-        case <-ctx.Done():
-            break dispatch
-        case jobs <- consumerCfg:
-        }
-    }
-    close(jobs)
-    wg.Wait()
+	for _, consumerCfg := range c.cfg.Consumers {
+		select {
+		case <-ctx.Done():
+			break dispatch
+		case jobs <- consumerCfg:
+		}
+	}
+	close(jobs)
+	wg.Wait()
 }
 
 func (c *Checker) pollOne(ctx context.Context, consumerCfg config.ConsumerConfig) {
@@ -224,7 +228,9 @@ func (c *Checker) RecordHeartbeat(name string) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	state, ok := c.states[name]
-	if !ok { return false }
+	if !ok {
+		return false
+	}
 	state.LastHeartbeat = time.Now()
 	return true
 }

@@ -11,8 +11,8 @@ package health
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"io"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -353,7 +353,9 @@ func TestChecker_DefaultReadinessPreservesDegradedStatus(t *testing.T) {
 	checker := newTestChecker(mock, defaultConsumers())
 	checker.pollAll(context.Background())
 	ready, failures := checker.IsReady()
-	if !ready || len(failures) != 0 { t.Fatalf("ready=%v failures=%v", ready, failures) }
+	if !ready || len(failures) != 0 {
+		t.Fatalf("ready=%v failures=%v", ready, failures)
+	}
 	states := checker.States()
 	if len(states) != 1 || states[0].Status != StatusDegraded || len(states[0].Reasons) == 0 {
 		t.Fatalf("degradation must remain observable: %+v", states)
@@ -380,12 +382,18 @@ func TestChecker_StaleObservationFailsReadiness(t *testing.T) {
 	checker.states["test-consumer"].LastSuccessful = time.Now().Add(-2 * time.Second)
 	checker.mu.Unlock()
 	ready, failures := checker.IsReady()
-	if ready || len(failures) == 0 { t.Fatalf("stale observation: ready=%v failures=%v", ready, failures) }
+	if ready || len(failures) == 0 {
+		t.Fatalf("stale observation: ready=%v failures=%v", ready, failures)
+	}
 	states := checker.States()
-	if states[0].Status != StatusUnknown { t.Fatalf("stale status=%s, want unknown", states[0].Status) }
+	if states[0].Status != StatusUnknown {
+		t.Fatalf("stale status=%s, want unknown", states[0].Status)
+	}
 	checker.pollAll(context.Background())
 	ready, failures = checker.IsReady()
-	if !ready { t.Fatalf("fresh observation should recover: %v", failures) }
+	if !ready {
+		t.Fatalf("fresh observation should recover: %v", failures)
+	}
 }
 
 func TestChecker_FailedPollDoesNotRefreshLastSuccessful(t *testing.T) {
@@ -397,7 +405,9 @@ func TestChecker_FailedPollDoesNotRefreshLastSuccessful(t *testing.T) {
 	mock.err = fmt.Errorf("temporary failure")
 	checker.pollAll(context.Background())
 	state := checker.States()[0]
-	if !state.LastSuccessful.Equal(original) || !state.LastChecked.After(original) { t.Fatalf("failed poll refreshed success timestamp: %+v", state) }
+	if !state.LastSuccessful.Equal(original) || !state.LastChecked.After(original) {
+		t.Fatalf("failed poll refreshed success timestamp: %+v", state)
+	}
 }
 
 func TestChecker_ProcessingHeartbeatLifecycle(t *testing.T) {
@@ -406,16 +416,28 @@ func TestChecker_ProcessingHeartbeatLifecycle(t *testing.T) {
 	mock := &mockNATSClient{connected: true, consumerInfo: &natsclient.ConsumerInfo{}}
 	checker := newTestChecker(mock, consumers)
 	checker.pollAll(context.Background())
-	if ready, _ := checker.IsReady(); ready { t.Fatal("missing heartbeat must fail readiness") }
-	if checker.RecordHeartbeat("unknown") { t.Fatal("unknown consumer accepted") }
-	if !checker.RecordHeartbeat("test-consumer") { t.Fatal("heartbeat rejected") }
-	if ready, failures := checker.IsReady(); !ready { t.Fatalf("fresh heartbeat: %v", failures) }
+	if ready, _ := checker.IsReady(); ready {
+		t.Fatal("missing heartbeat must fail readiness")
+	}
+	if checker.RecordHeartbeat("unknown") {
+		t.Fatal("unknown consumer accepted")
+	}
+	if !checker.RecordHeartbeat("test-consumer") {
+		t.Fatal("heartbeat rejected")
+	}
+	if ready, failures := checker.IsReady(); !ready {
+		t.Fatalf("fresh heartbeat: %v", failures)
+	}
 	checker.mu.Lock()
-	checker.states["test-consumer"].LastHeartbeat = time.Now().Add(-2*time.Second)
+	checker.states["test-consumer"].LastHeartbeat = time.Now().Add(-2 * time.Second)
 	checker.mu.Unlock()
-	if ready, _ := checker.IsReady(); ready { t.Fatal("expired heartbeat must fail readiness") }
+	if ready, _ := checker.IsReady(); ready {
+		t.Fatal("expired heartbeat must fail readiness")
+	}
 	states := checker.States()
-	if states[0].Status != StatusUnknown { t.Fatalf("expired heartbeat status=%s", states[0].Status) }
+	if states[0].Status != StatusUnknown {
+		t.Fatalf("expired heartbeat status=%s", states[0].Status)
+	}
 }
 
 // blockingPollClient deliberately stalls one consumer until its context expires.
@@ -433,21 +455,27 @@ func (blockingPollClient) GetConsumerInfo(ctx context.Context, stream, consumer 
 
 func TestChecker_BoundedConcurrentPollingDoesNotStarveHealthyConsumer(t *testing.T) {
 	consumers := []config.ConsumerConfig{
-		{Name:"slow", Stream:"SLOW", Consumer:"slow"},
-		{Name:"fast", Stream:"FAST", Consumer:"fast"},
+		{Name: "slow", Stream: "SLOW", Consumer: "slow"},
+		{Name: "fast", Stream: "FAST", Consumer: "fast"},
 	}
 	checker := newTestChecker(blockingPollClient{}, consumers)
-	checker.cfg.PollTimeout = 100*time.Millisecond
+	checker.cfg.PollTimeout = 100 * time.Millisecond
 	started := time.Now()
 	checker.pollAll(context.Background())
-	if time.Since(started) > 750*time.Millisecond { t.Fatal("polling cycle exceeded bounded latency") }
+	if time.Since(started) > 750*time.Millisecond {
+		t.Fatal("polling cycle exceeded bounded latency")
+	}
 	states := checker.States()
 	foundFast := false
 	for _, state := range states {
 		if state.Name == "fast" {
 			foundFast = true
-			if state.Status != StatusHealthy { t.Fatalf("fast consumer starved: %+v", state) }
+			if state.Status != StatusHealthy {
+				t.Fatalf("fast consumer starved: %+v", state)
+			}
 		}
 	}
-	if !foundFast { t.Fatal("fast consumer missing from results") }
+	if !foundFast {
+		t.Fatal("fast consumer missing from results")
+	}
 }
