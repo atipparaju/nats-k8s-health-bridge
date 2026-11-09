@@ -26,6 +26,7 @@ and future approved releases will follow [Semantic Versioning](https://semver.or
 - Fail readiness on stale consumer observations rather than reusing outdated successful poll results; report stale status in `/status`.
 
 ### Added
+- Private, non-publishing release-validation CI for Linux Docker smoke, Windows PowerShell syntax, Git history secret scanning, local image SPDX SBOM and QEMU arm64 runtime; an owner-only release evidence and no-go checklist.
 - A cross-platform Docker quickstart with a matching real JetStream consumer configuration and local image build.
 - Expanded Kind smoke coverage with real consumer creation, healthy readiness, heartbeat expiration, NATS outage and recovery.
 - Cross-platform local Kubernetes validation report covering functional, resilience, heartbeat, security and rolling-update testing.
