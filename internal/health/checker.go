@@ -103,8 +103,10 @@ func (c *Checker) Run(ctx context.Context) {
 	}
 }
 
-// Each polling cycle uses a bounded worker pool and a shared deadline. This
-// prevents a failing consumer from blocking observations of healthy consumers.
+// A shared per-cycle deadline and small worker pool bound resource consumption
+// across large consumer lists. Workers stop accepting work when the deadline is
+// reached; only consumers already polled get a new observation for that cycle.
+// The readiness freshness check detects observations skipped across cycles.
 const maxConcurrentPolls = 4
 
 func (c *Checker) pollAll(ctx context.Context) {
@@ -154,6 +156,8 @@ func (c *Checker) pollOne(ctx context.Context, consumerCfg config.ConsumerConfig
 	state.LastChecked = time.Now()
 
 	if err != nil {
+		// Preserve the last successful timestamp: a failed poll is not fresh
+		// evidence of health. Existing lag gauges are historical until recovery.
 		state.Status = StatusUnknown
 		state.LastError = err.Error()
 		state.Reasons = []string{fmt.Sprintf("failed to fetch consumer info: %s", err)}
@@ -214,10 +218,6 @@ func (c *Checker) IsLive() bool {
 	return true
 }
 
-// IsReady reports whether monitored consumer metadata is available.
-// Degraded thresholds are observational by default: backlog alone must not evict a
-// functioning consumer from Kubernetes service. Operators may explicitly opt in
-// to strict threshold-based readiness via server.readiness_fail_on_degraded.
 // RecordHeartbeat records an application-reported processing heartbeat.
 // Only configured consumer names are accepted; unknown names are rejected.
 func (c *Checker) RecordHeartbeat(name string) bool {
@@ -238,6 +238,10 @@ func (c *Checker) heartbeatExpired(name string, state *ConsumerState, now time.T
 	return false
 }
 
+// IsReady reports whether consumer observations are available and fresh, and
+// whether any configured processing heartbeat has expired. Threshold degradation
+// remains observational by default; strict readiness is opt-in, avoiding
+// unnecessary pod eviction solely because of JetStream backlog.
 func (c *Checker) IsReady() (bool, []string) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -257,8 +261,9 @@ func (c *Checker) IsReady() (bool, []string) {
 	return len(failures) == 0, failures
 }
 
-// stale reports whether the most recent successful consumer poll is too old.
-// A zero max age disables age enforcement for manually constructed configurations.
+// stale rejects a successful observation after its freshness budget expires.
+// A zero maximum age disables this test in manually constructed configurations;
+// normal loaded configuration requires a positive freshness window.
 func (c *Checker) stale(state *ConsumerState, now time.Time) bool {
 	return c.cfg.MaxObservationAge > 0 && (state.LastSuccessful.IsZero() || now.Sub(state.LastSuccessful) > c.cfg.MaxObservationAge)
 }
