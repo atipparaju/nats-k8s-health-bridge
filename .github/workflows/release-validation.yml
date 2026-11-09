@@ -73,13 +73,22 @@ jobs:
           # potential credentials, matches, paths, author metadata, or commits.
           if [ -s "$report_dir/findings.json" ]; then
             python3 - "$report_dir/findings.json" <<'PY'
-          import collections, json, sys
+          import collections, json, re, sys
           with open(sys.argv[1], encoding="utf-8") as f:
               matches = json.load(f)
           print("Candidate secret findings:", len(matches))
           summary = collections.Counter(item.get("RuleID", "unknown") for item in matches)
           for name, count in sorted(summary.items()):
               print("Detector category:", name, "count:", count)
+          # Commit SHA and line number allow private owner follow-up without
+          # exposing the secret, match, filename, local path, or author identity.
+          for item in matches:
+              commit = str(item.get("Commit", ""))[:12]
+              line = int(item.get("StartLine", 0) or 0)
+              candidate = str(item.get("Match", ""))
+              variable_reference = bool(re.search(r"\\$\\{?[A-Z_][A-Z0-9_]*\\}?", candidate))
+              print("Candidate location: commit", commit, "line", line,
+                    "contains_env_reference", variable_reference)
           PY
           fi
           if [ "$status" -ne 0 ]; then
