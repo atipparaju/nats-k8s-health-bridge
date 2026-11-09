@@ -1,0 +1,122 @@
+name: Private Release Validation
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Do not grant any registry write access. No release or registry publication happens here.
+permissions:
+  contents: read
+
+jobs:
+  linux-docker-smoke:
+    name: Linux Docker Quickstart
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.10'
+          cache: true
+      - name: Build and exercise the documented local Docker example
+        run: bash test/release/docker-quickstart-linux.sh
+
+  windows-script-review:
+    name: PowerShell Syntax (not Docker Desktop)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate PowerShell 7 smoke-test syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          $path = Join-Path (Get-Location).Path "test/release/docker-quickstart-windows.ps1"
+          [void][System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$errors)
+          if ($errors.Count -ne 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+          Write-Output "PASS: PowerShell script parses. Full Docker Desktop behavior REQUIRES owner execution on Windows."
+
+  history-secrets:
+    name: Git History Secret Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Scan reachable Git history with redaction
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --tags --force origin '+refs/heads/*:refs/remotes/origin/*'
+          # Keep scanner output strictly inside the runner. Even redacted findings
+          # can contain sensitive paths and context; do not echo or upload them.
+          output="$(mktemp)"
+          trap 'rm -f "$output"' EXIT
+          status=0
+          docker run --rm --network none -v "$PWD:/repo:ro" -w /repo \
+            ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            git --redact=100 --no-banner --log-opts="--all" /repo >"$output" 2>&1 || status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "FAIL: Git history scan found possible secrets or a scanning error. Review locally; findings are deliberately not uploaded." >&2
+            exit "$status"
+          fi
+          echo "PASS: redacted Git history scan completed; no findings reported."
+
+  sbom:
+    name: Local Image SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build image locally (no registry operations)
+        run: docker build --tag nats-k8s-health-bridge:release-evidence .
+      - name: Generate private SPDX SBOM artifact
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: nats-k8s-health-bridge:release-evidence
+          format: spdx-json
+          output-file: candidate-sbom.spdx.json
+          artifact-name: private-candidate-sbom.spdx.json
+          upload-artifact: 'true'
+          upload-artifact-retention: '7'
+          upload-release-assets: 'false'
+      - name: Verify SBOM exists and contains packages
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          doc = json.loads(Path("candidate-sbom.spdx.json").read_text())
+          assert doc.get("spdxVersion", "").startswith("SPDX-2"), "Invalid SPDX version"
+          assert len(doc.get("packages", [])) > 0, "No packages found"
+          print(f"PASS: local SPDX inventory created with {len(doc['packages'])} package records")
+          PY
+
+  arm64-smoke:
+    name: Linux arm64 Local Runtime Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install QEMU user-mode support
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build local arm64 image (no push)
+        run: docker buildx build --platform linux/arm64 --load --tag nats-k8s-health-bridge:arm64-smoke .
+      - name: Verify arm64 image runs and reports its version
+        shell: bash
+        run: |
+          set -euo pipefail
+          platform="$(docker image inspect nats-k8s-health-bridge:arm64-smoke --format '{{.Os}}/{{.Architecture}}')"
+          test "$platform" = "linux/arm64"
+          docker run --rm --platform linux/arm64 nats-k8s-health-bridge:arm64-smoke --version
+          echo "PASS: linux/arm64 image runs under QEMU. This is not native ARM hardware or a registry manifest test."
