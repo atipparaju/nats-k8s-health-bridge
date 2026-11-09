@@ -54,6 +54,8 @@ jobs:
           if [ -n "$unformatted" ]; then
             echo "Go files requiring gofmt:"
             echo "$unformatted"
+            echo "Canonical formatting patch:"
+            gofmt -d $(git ls-files '*.go')
             echo "Run gofmt -w on the files listed above and commit the changes."
             exit 1
           fi
