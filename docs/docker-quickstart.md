@@ -2,6 +2,15 @@
 
 This guide does not require a public GHCR package. It builds a local image and uses a private Docker network so that the bridge resolves the NATS container by name, consistently on Windows and Linux. No host-specific addresses, real credentials or workstation paths are committed.
 
+## Automated local validation (no registry access)
+
+The documented manual steps below remain available. Issue #47 also provides disposable local-only test harnesses that create the matching JetStream resources, build the bridge image locally, verify probe and bearer-token behavior, and clean up their containers and network:
+
+- Linux Docker Engine with Bash and Go: `bash test/release/docker-quickstart-linux.sh`
+- Windows Docker Desktop in Linux-container mode with PowerShell 7 and Go: `pwsh -File .\\test\\release\\docker-quickstart-windows.ps1`
+
+These harnesses require free host-loopback ports `14222` and `18080`, do not create releases or touch GHCR, and deliberately leave the local `nats-k8s-health-bridge:local` image for optional inspection. See [release validation evidence](release-47-evidence.md). The Windows script requires an actual Windows Docker Desktop run; parsing it on a GitHub runner is not enough.
+
 ## Prerequisites
 
 Docker Engine/Desktop (Linux containers), Git, and the NATS CLI installed on the host. Run the commands from the repository root in PowerShell 7+ (Windows) or Bash (Linux). The demo uses memory-backed JetStream and is not a durability benchmark.
