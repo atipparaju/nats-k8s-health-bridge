@@ -47,7 +47,7 @@ type Server struct {
 func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logger *slog.Logger) *Server {
 	mux := http.NewServeMux()
 
-	// /healthz — liveness: is NATS connected?
+	// /healthz reports bridge process liveness, independently of NATS availability.
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if checker.IsLive() {
 			writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
@@ -81,7 +81,8 @@ func New(cfg *config.Config, checker HealthChecker, reg *metrics.Registry, logge
 		})
 	})
 
-	// Application heartbeats are opt-in and must be restricted to trusted pod-local callers.
+	// Application heartbeats are opt-in. Only the socket peer's loopback IP is
+	// trusted; forwarded headers must not grant permission to a remote caller.
 	mux.HandleFunc("POST /heartbeat/{consumer}", func(w http.ResponseWriter, r *http.Request) {
 		if !isLoopback(r.RemoteAddr) {
 			http.Error(w, "heartbeat requires loopback caller", http.StatusForbidden)
@@ -161,8 +162,9 @@ func isLoopback(remote string) bool {
 	return ip != nil && ip.IsLoopback()
 }
 
-// protected applies optional bearer-token authentication to diagnostic endpoints.
-// No token fails closed by default. Anonymous access is explicit local-test opt-in.
+// protected enforces bearer-token authentication on diagnostics. An unset
+// token fails closed; anonymous access must be explicitly enabled for isolated
+// local tests. Probes remain unauthenticated for Kubernetes health checks.
 func protected(token string, allowAnonymous bool, next http.Handler) http.Handler {
 	if token == "" && allowAnonymous { return next }
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
