@@ -2,33 +2,22 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-|---------|--------------------|
-| 0.1.x   | :white_check_mark: |
+**No released version is currently supported.** GitHub had no Releases or Git tag refs when checked on 2026-11-04. The historical `0.1.0` milestone and chart packaging version do not establish a published security-supported release.
+
+| Version | Status | Security support |
+| --- | --- | --- |
+| `main` | Private, unreleased development | Best effort, not a published supported version |
+| Internal `0.1.0` baseline | Historical milestone, not a release | Not supported |
+| Future versions | Not published or approved | Policy to be established before release |
 
 ## Reporting a Vulnerability
 
-**Please do not report security vulnerabilities through public GitHub issues.**
-
-Instead, use [GitHub Security Advisories](https://github.com/atipparaju/nats-k8s-health-bridge/security/advisories/new) to report vulnerabilities privately.
-
-When reporting, please include:
-
-- Description of the vulnerability
-- Steps to reproduce (or a proof-of-concept)
-- Impact assessment (what an attacker could achieve)
-- Any suggested fix, if you have one
-
-## Response Timeline
-
-- **Acknowledgement:** within 48 hours
-- **Initial assessment:** within 7 days
-- **Fix and disclosure:** coordinated with the reporter, typically within 30 days
+**Do not report security vulnerabilities in public GitHub issues.** Use [GitHub Security Advisories](https://github.com/atipparaju/nats-k8s-health-bridge/security/advisories/new) for private coordinated reporting where access permits. The private repository may not be available to all external reporters. Include a description, reproduction steps, impact and suggested mitigation. No fixed acknowledgement, fix or disclosure deadline is committed while the project is unreleased.
 
 ## Scope
 
-This policy covers the `nats-k8s-health-bridge` sidecar binary, its Docker image, and the Helm chart. It does not cover NATS server itself — please report NATS vulnerabilities to the [NATS project](https://github.com/nats-io/nats-server/security).
+This policy covers the bridge binary, container build and Helm chart, not NATS server itself. Report NATS vulnerabilities to the [NATS project](https://github.com/nats-io/nats-server/security).
 
 ## Credits
 
-We gratefully acknowledge security researchers who report vulnerabilities responsibly. With your permission, we will credit you in the release notes for the fix.
+With permission, responsible researchers may be acknowledged in future release notes.

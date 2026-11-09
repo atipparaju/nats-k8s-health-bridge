@@ -3,7 +3,8 @@ name: nats-k8s-health-bridge
 description: Kubernetes sidecar for NATS JetStream consumer health probes
 type: application
 version: 0.1.0
-appVersion: "0.1.0"
+# Chart version 0.1.0 is an internal packaging revision, not an app release.
+appVersion: "dev"
 keywords:
   - nats
   - jetstream

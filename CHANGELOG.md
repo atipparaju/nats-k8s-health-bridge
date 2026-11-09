@@ -3,11 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and future approved releases will follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+> **Unreleased private repository (verified 2026-11-04).** No GitHub Release or Git tag refs exist. The `0.1.0` changelog record is a historical internal milestone, not a release or a published image.
 
 ## [Unreleased]
 
 ### Fixed
+- Reconciled internal release history, security support claims, Helm appVersion and Apache license appendix.
 - Removed obsolete repository-bootstrap Git pushes and unrestricted Makefile GHCR image pushes; local builds use a local-only tag, and CI verifies offline release safeguards with no floating publication tags.
 - Keep bridge HTTP probes live when NATS is unavailable during initial startup; reconnect with the existing client retry policy and verify recovery in Kind.
 - Redact NATS URL userinfo, passwords, tokens, paths and query parameters from connection and reconnect logs and errors; retain safe host metadata and typed error handling.
@@ -40,7 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `max_redelivery_rate` and `eval_window` configuration keys; use application-level delivery/ack instrumentation for rate-based monitoring.
 
 
-## [0.1.0] - 2026-04-12
+## Internal development baseline 0.1.0 (recorded 2026-04-12; not released)
+
+These are historical project notes, not verified claims that every listed feature shipped on this date.
 
 ### Added
 
@@ -57,5 +62,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TLS and NKey/credentials authentication support for NATS connections
 - Structured JSON logging via `log/slog`
 
-[Unreleased]: https://github.com/atipparaju/nats-k8s-health-bridge/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/atipparaju/nats-k8s-health-bridge/releases/tag/v0.1.0
