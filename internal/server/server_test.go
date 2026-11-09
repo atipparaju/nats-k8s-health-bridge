@@ -10,10 +10,10 @@ package server
 
 import (
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"io"
 	"testing"
 	"time"
 
@@ -24,11 +24,11 @@ import (
 
 // mockHealthChecker implements HealthChecker for testing.
 type mockHealthChecker struct {
-	live     bool
-	connected bool
-	ready    bool
-	failures []string
-	states   []*health.ConsumerState
+	live          bool
+	connected     bool
+	ready         bool
+	failures      []string
+	states        []*health.ConsumerState
 	heartbeatName string
 }
 
@@ -42,7 +42,10 @@ func (m *mockHealthChecker) IsReady() (bool, []string) {
 	return m.ready, m.failures
 }
 
-func (m *mockHealthChecker) RecordHeartbeat(name string) bool { m.heartbeatName = name; return name == "test-consumer" }
+func (m *mockHealthChecker) RecordHeartbeat(name string) bool {
+	m.heartbeatName = name
+	return name == "test-consumer"
+}
 
 func (m *mockHealthChecker) States() []*health.ConsumerState {
 	return m.states
@@ -59,9 +62,9 @@ func makeRequest(t *testing.T, handler http.Handler, method, path string) *httpt
 func setupServer(checker HealthChecker) http.Handler {
 	cfg := &config.Config{
 		Server: config.ServerConfig{
-			Port:            8080,
+			Port:                            8080,
 			AllowUnauthenticatedDiagnostics: true, // test-only fixture
-			ShutdownTimeout: 10 * time.Second,
+			ShutdownTimeout:                 10 * time.Second,
 		},
 	}
 	reg := metrics.NewRegistry()
@@ -119,10 +122,10 @@ func TestReadyzHandler_Ready(t *testing.T) {
 
 func TestReadyzHandler_NotReady(t *testing.T) {
 	checker := &mockHealthChecker{
-		live:     true,
+		live:      true,
 		connected: true,
-		ready:    false,
-		failures: []string{"test-consumer: degraded"},
+		ready:     false,
+		failures:  []string{"test-consumer: degraded"},
 	}
 	handler := setupServer(checker)
 
@@ -157,9 +160,9 @@ func TestReadyzHandler_NATSDisconnected(t *testing.T) {
 
 func TestStatusHandler(t *testing.T) {
 	checker := &mockHealthChecker{
-		live:  true,
+		live:      true,
 		connected: true,
-		ready: true,
+		ready:     true,
 		states: []*health.ConsumerState{
 			{
 				Name:     "test-consumer",
@@ -259,18 +262,25 @@ func TestHeartbeatHandler_RejectsRemoteCaller(t *testing.T) {
 	req.RemoteAddr = "192.0.2.20:1234"
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
-	if rr.Code != http.StatusForbidden { t.Fatalf("remote status=%d, want 403", rr.Code) }
+	if rr.Code != http.StatusForbidden {
+		t.Fatalf("remote status=%d, want 403", rr.Code)
+	}
 }
 
 func TestHeartbeatHandler_AcceptsLoopbackAndRejectsUnknown(t *testing.T) {
 	checker := &mockHealthChecker{}
 	handler := setupServer(checker)
-	for _, tt := range []struct{name string; code int}{{"test-consumer", http.StatusOK}, {"unknown", http.StatusNotFound}} {
+	for _, tt := range []struct {
+		name string
+		code int
+	}{{"test-consumer", http.StatusOK}, {"unknown", http.StatusNotFound}} {
 		req := httptest.NewRequest(http.MethodPost, "/heartbeat/"+tt.name, nil)
 		req.RemoteAddr = "127.0.0.1:1234"
 		rr := httptest.NewRecorder()
 		handler.ServeHTTP(rr, req)
-		if rr.Code != tt.code { t.Fatalf("%s: status=%d want=%d", tt.name, rr.Code, tt.code) }
+		if rr.Code != tt.code {
+			t.Fatalf("%s: status=%d want=%d", tt.name, rr.Code, tt.code)
+		}
 	}
 }
 
@@ -279,30 +289,45 @@ func TestProtectedDiagnosticEndpoints(t *testing.T) {
 	reg := metrics.NewRegistry()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	srv := New(cfg, &mockHealthChecker{}, reg, logger)
-	for _, tt := range []struct{path, token string; want int} {
+	for _, tt := range []struct {
+		path, token string
+		want        int
+	}{
 		{"/metrics", "", 401}, {"/metrics", "wrong", 401}, {"/metrics", "metrics-secret", 200},
 		{"/status", "", 401}, {"/status", "metrics-secret", 401}, {"/status", "status-secret", 200},
 		{"/healthz", "", 503},
 	} {
 		req := httptest.NewRequest("GET", tt.path, nil)
-		if tt.token != "" { req.Header.Set("Authorization", "Bearer "+tt.token) }
+		if tt.token != "" {
+			req.Header.Set("Authorization", "Bearer "+tt.token)
+		}
 		rr := httptest.NewRecorder()
 		srv.srv.Handler.ServeHTTP(rr, req)
-		if rr.Code != tt.want { t.Errorf("%s token=%q status=%d want=%d", tt.path, tt.token, rr.Code, tt.want) }
+		if rr.Code != tt.want {
+			t.Errorf("%s token=%q status=%d want=%d", tt.path, tt.token, rr.Code, tt.want)
+		}
 	}
-	if srv.srv.Addr != "127.0.0.1:8080" { t.Errorf("listen address=%s", srv.srv.Addr) }
+	if srv.srv.Addr != "127.0.0.1:8080" {
+		t.Errorf("listen address=%s", srv.srv.Addr)
+	}
 }
 
 func TestDiagnosticEndpointsFailClosedByDefault(t *testing.T) {
-	cfg := &config.Config{Server: config.ServerConfig{Port:8080, BindAddress:"0.0.0.0"}}
+	cfg := &config.Config{Server: config.ServerConfig{Port: 8080, BindAddress: "0.0.0.0"}}
 	reg := metrics.NewRegistry()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	check := &mockHealthChecker{live:true, connected:true, ready:true}
+	check := &mockHealthChecker{live: true, connected: true, ready: true}
 	handler := New(cfg, check, reg, logger).srv.Handler
 	for _, path := range []string{"/status", "/metrics"} {
 		rr := makeRequest(t, handler, "GET", path)
-		if rr.Code != http.StatusUnauthorized { t.Errorf("%s status=%d, want 401",path,rr.Code) }
+		if rr.Code != http.StatusUnauthorized {
+			t.Errorf("%s status=%d, want 401", path, rr.Code)
+		}
 	}
-	if rr := makeRequest(t, handler, "GET", "/healthz"); rr.Code != http.StatusOK { t.Fatalf("liveness=%d",rr.Code) }
-	if rr := makeRequest(t, handler, "GET", "/readyz"); rr.Code != http.StatusOK { t.Fatalf("readiness=%d",rr.Code) }
+	if rr := makeRequest(t, handler, "GET", "/healthz"); rr.Code != http.StatusOK {
+		t.Fatalf("liveness=%d", rr.Code)
+	}
+	if rr := makeRequest(t, handler, "GET", "/readyz"); rr.Code != http.StatusOK {
+		t.Fatalf("readiness=%d", rr.Code)
+	}
 }

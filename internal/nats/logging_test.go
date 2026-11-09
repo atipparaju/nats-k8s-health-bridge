@@ -25,7 +25,7 @@ import (
 // Async NATS connection callbacks may log after Close returns. The collector
 // must synchronize reads with those callback writes under -race.
 type synchronizedLogBuffer struct {
-	mu sync.Mutex
+	mu  sync.Mutex
 	buf bytes.Buffer
 }
 

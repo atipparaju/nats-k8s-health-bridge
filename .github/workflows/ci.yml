@@ -48,6 +48,18 @@ jobs:
           go-version: '1.26.10'
           cache: true
 
+      - name: Verify Go formatting
+        run: |
+          unformatted="$(gofmt -l $(git ls-files '*.go'))"
+          if [ -n "$unformatted" ]; then
+            echo "Go files requiring gofmt:"
+            echo "$unformatted"
+            echo "Canonical formatting patch:"
+            gofmt -d $(git ls-files '*.go')
+            echo "Run gofmt -w on the files listed above and commit the changes."
+            exit 1
+          fi
+
       - name: Tidy
         run: go mod tidy && git diff --exit-code
 

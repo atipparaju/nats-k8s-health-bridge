@@ -214,20 +214,30 @@ func TestLoad_InvalidConfigFile(t *testing.T) {
 func TestLoad_ObservationAgeDefaultsAndValidation(t *testing.T) {
 	path := writeTestConfig(t, "nats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
 	cfg, err := Load(path)
-	if err != nil { t.Fatal(err) }
-	if cfg.MaxObservationAge != 30*time.Second { t.Fatalf("default max_observation_age=%v", cfg.MaxObservationAge) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.MaxObservationAge != 30*time.Second {
+		t.Fatalf("default max_observation_age=%v", cfg.MaxObservationAge)
+	}
 	path = writeTestConfig(t, "poll_interval: 10s\nmax_observation_age: 5s\nnats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
-	if _, err := Load(path); err == nil { t.Fatal("expected invalid max_observation_age error") }
+	if _, err := Load(path); err == nil {
+		t.Fatal("expected invalid max_observation_age error")
+	}
 }
 
 func TestLoad_NegativeHeartbeatTimeout(t *testing.T) {
 	path := writeTestConfig(t, "nats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n    heartbeat_timeout: -1s\n")
-	if _, err := Load(path); err == nil { t.Fatal("expected negative heartbeat timeout error") }
+	if _, err := Load(path); err == nil {
+		t.Fatal("expected negative heartbeat timeout error")
+	}
 }
 
 func TestLoad_InvalidBindAddress(t *testing.T) {
 	path := writeTestConfig(t, "server:\n  bind_address: invalid-host\nnats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
-	if _, err := Load(path); err == nil { t.Fatal("expected invalid bind address") }
+	if _, err := Load(path); err == nil {
+		t.Fatal("expected invalid bind address")
+	}
 }
 
 // Security regression: Secret-backed env vars must be unmarshaled even when
@@ -237,7 +247,9 @@ func TestLoad_EnvironmentOnlyDiagnosticTokens(t *testing.T) {
 	t.Setenv("NKHB_SERVER_METRICS_TOKEN", "metrics-from-secret")
 	t.Setenv("NKHB_SERVER_STATUS_TOKEN", "status-from-secret")
 	cfg, err := Load(path)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if cfg.Server.MetricsToken != "metrics-from-secret" || cfg.Server.StatusToken != "status-from-secret" {
 		t.Fatal("environment-only diagnostic tokens were not loaded")
 	}
@@ -248,7 +260,9 @@ func TestLoad_DiagnosticTokensEnvironmentOverridesYAML(t *testing.T) {
 	t.Setenv("NKHB_SERVER_METRICS_TOKEN", "env-metrics")
 	t.Setenv("NKHB_SERVER_STATUS_TOKEN", "env-status")
 	cfg, err := Load(path)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	if cfg.Server.MetricsToken != "env-metrics" || cfg.Server.StatusToken != "env-status" {
 		t.Fatal("environment tokens must override YAML tokens")
 	}
@@ -257,10 +271,16 @@ func TestLoad_DiagnosticTokensEnvironmentOverridesYAML(t *testing.T) {
 func TestLoad_PollTimeoutDefaultAndValidation(t *testing.T) {
 	path := writeTestConfig(t, "nats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
 	cfg, err := Load(path)
-	if err != nil { t.Fatal(err) }
-	if cfg.PollTimeout != 8*time.Second { t.Fatalf("default poll_timeout=%v, want 8s", cfg.PollTimeout) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.PollTimeout != 8*time.Second {
+		t.Fatalf("default poll_timeout=%v, want 8s", cfg.PollTimeout)
+	}
 	path = writeTestConfig(t, "poll_timeout: -1s\nnats:\n  url: nats://localhost:4222\nconsumers:\n  - stream: S\n    consumer: C\n")
-	if _, err := Load(path); err == nil { t.Fatal("negative poll_timeout must be rejected") }
+	if _, err := Load(path); err == nil {
+		t.Fatal("negative poll_timeout must be rejected")
+	}
 }
 
 const minimalNATSSecurityConfig = `nats:
@@ -274,43 +294,43 @@ consumers:
 // environment-only configuration rather than relying on Viper's lookups.
 func TestLoad_NATSSecuritySettingsEnvironmentOnly(t *testing.T) {
 	tests := []struct {
-		name string
-		env map[string]string
+		name                             string
+		env                              map[string]string
 		credentials, nkey, cert, key, ca string
 	}{
 		{
-			name: "credentials file",
-			env: map[string]string{"NKHB_NATS_CREDENTIALS_FILE": "/secrets/user.creds"},
+			name:        "credentials file",
+			env:         map[string]string{"NKHB_NATS_CREDENTIALS_FILE": "/secrets/user.creds"},
 			credentials: "/secrets/user.creds",
 		},
 		{
 			name: "nkey file",
-			env: map[string]string{"NKHB_NATS_NKEY_FILE": "/secrets/nkey.seed"},
+			env:  map[string]string{"NKHB_NATS_NKEY_FILE": "/secrets/nkey.seed"},
 			nkey: "/secrets/nkey.seed",
 		},
 		{
 			name: "complete client certificate pair",
 			env: map[string]string{
 				"NKHB_NATS_TLS_CERT": "/tls/client.crt",
-				"NKHB_NATS_TLS_KEY": "/tls/client.key",
+				"NKHB_NATS_TLS_KEY":  "/tls/client.key",
 			},
 			cert: "/tls/client.crt", key: "/tls/client.key",
 		},
 		{
 			name: "custom CA on its own",
-			env: map[string]string{"NKHB_NATS_TLS_CA": "/tls/ca.crt"},
-			ca: "/tls/ca.crt",
+			env:  map[string]string{"NKHB_NATS_TLS_CA": "/tls/ca.crt"},
+			ca:   "/tls/ca.crt",
 		},
 		{
 			name: "credentials plus mTLS",
 			env: map[string]string{
 				"NKHB_NATS_CREDENTIALS_FILE": "/secrets/user.creds",
-				"NKHB_NATS_TLS_CERT": "/tls/client.crt",
-				"NKHB_NATS_TLS_KEY": "/tls/client.key",
-				"NKHB_NATS_TLS_CA": "/tls/ca.crt",
+				"NKHB_NATS_TLS_CERT":         "/tls/client.crt",
+				"NKHB_NATS_TLS_KEY":          "/tls/client.key",
+				"NKHB_NATS_TLS_CA":           "/tls/ca.crt",
 			},
 			credentials: "/secrets/user.creds",
-			cert: "/tls/client.crt", key: "/tls/client.key", ca: "/tls/ca.crt",
+			cert:        "/tls/client.crt", key: "/tls/client.key", ca: "/tls/ca.crt",
 		},
 	}
 	for _, tt := range tests {
@@ -371,7 +391,7 @@ func TestLoad_NATSSecuritySettingsRejectConflicts(t *testing.T) {
 	tests := []struct {
 		name string
 		yaml string
-		env map[string]string
+		env  map[string]string
 	}{
 		{
 			name: "YAML both identity methods",
@@ -381,16 +401,16 @@ func TestLoad_NATSSecuritySettingsRejectConflicts(t *testing.T) {
 			name: "environment both identity methods",
 			env: map[string]string{
 				"NKHB_NATS_CREDENTIALS_FILE": "/secrets/user.creds",
-				"NKHB_NATS_NKEY_FILE": "/secrets/user.nkey",
+				"NKHB_NATS_NKEY_FILE":        "/secrets/user.nkey",
 			},
 		},
 		{
 			name: "environment TLS certificate without key",
-			env: map[string]string{"NKHB_NATS_TLS_CERT": "/tls/client.crt"},
+			env:  map[string]string{"NKHB_NATS_TLS_CERT": "/tls/client.crt"},
 		},
 		{
 			name: "environment TLS key without certificate",
-			env: map[string]string{"NKHB_NATS_TLS_KEY": "/tls/client.key"},
+			env:  map[string]string{"NKHB_NATS_TLS_KEY": "/tls/client.key"},
 		},
 		{
 			name: "YAML TLS certificate without key",
@@ -403,7 +423,7 @@ func TestLoad_NATSSecuritySettingsRejectConflicts(t *testing.T) {
 		{
 			name: "YAML and environment identity conflict",
 			yaml: "  credentials_file: /secrets/user.creds\n",
-			env: map[string]string{"NKHB_NATS_NKEY_FILE": "/secrets/user.nkey"},
+			env:  map[string]string{"NKHB_NATS_NKEY_FILE": "/secrets/user.nkey"},
 		},
 	}
 	for _, tt := range tests {

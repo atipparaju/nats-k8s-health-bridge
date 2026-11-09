@@ -10,11 +10,11 @@ import (
 
 func TestLegacyEvaluatorBoundaryParity(t *testing.T) {
 	tests := []struct {
-		name string
-		pending uint64
-		ack int
+		name       string
+		pending    uint64
+		ack        int
 		thresholds config.Thresholds
-		want []string
+		want       []string
 	}{
 		{"zero thresholds disable checks", 1000, 1000, config.Thresholds{}, nil},
 		{"lag exactly at threshold", 100, 0, config.Thresholds{MaxLag: 100}, nil},
@@ -26,7 +26,7 @@ func TestLegacyEvaluatorBoundaryParity(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := (LegacyEvaluator{}).Evaluate(&natsclient.ConsumerInfo{
-				NumPending: tt.pending,
+				NumPending:    tt.pending,
 				NumAckPending: tt.ack,
 			}, tt.thresholds)
 			if !reflect.DeepEqual(got, tt.want) {

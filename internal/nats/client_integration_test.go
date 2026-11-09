@@ -173,9 +173,9 @@ func TestClient_Integration_GetConsumerInfo_NotFound(t *testing.T) {
 	}
 }
 
- // Test an actual NATS connection rather than only checking decoded fields:
- // missing Secret-mounted credentials must not be silently ignored in favor
- // of the anonymous server used by the integration fixture.
+// Test an actual NATS connection rather than only checking decoded fields:
+// missing Secret-mounted credentials must not be silently ignored in favor
+// of the anonymous server used by the integration fixture.
 func TestClient_Integration_EnvironmentOnlyMissingCredentialsFailsClosed(t *testing.T) {
 	_, cleanup := setupTestStream(t)
 	defer cleanup()
