@@ -268,8 +268,8 @@ func (c *Checker) IsReady() (bool, []string) {
 }
 
 // stale rejects a successful observation after its freshness budget expires.
-// A zero maximum age disables this test in manually constructed configurations;
-// normal loaded configuration requires a positive freshness window.
+// A zero maximum age disables this test; loaded configuration defaults to
+// 30 seconds but can explicitly opt out of age enforcement.
 func (c *Checker) stale(state *ConsumerState, now time.Time) bool {
 	return c.cfg.MaxObservationAge > 0 && (state.LastSuccessful.IsZero() || now.Sub(state.LastSuccessful) > c.cfg.MaxObservationAge)
 }
