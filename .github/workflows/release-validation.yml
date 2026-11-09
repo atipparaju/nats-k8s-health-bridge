@@ -89,6 +89,16 @@ jobs:
               variable_reference = any(marker in candidate for marker in ("$NKHB_", "${NKHB_"))
               print("Candidate location: commit", commit, "line", line,
                     "contains_env_reference", variable_reference)
+              # Fingerprints are metadata (commit:path:rule:line). Only emit a
+              # candidate fingerprint if we recognize our deliberately invalid
+              # synthetic bearer-header example, never a credential value.
+              known_test = (
+                  str(item.get("File", "")).endswith("test/release/docker-quickstart-linux.sh")
+                  and item.get("RuleID") == "curl-auth-header"
+                  and "invalid-token" in str(item.get("Match", ""))
+              )
+              if known_test:
+                  print("Synthetic test fingerprint:", item.get("Fingerprint", "unavailable"))
           PY
           fi
           if [ "$status" -ne 0 ]; then
