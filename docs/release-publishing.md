@@ -40,6 +40,10 @@ The GitHub Actions job is named **Publish approved release image** and is intent
 
 The workflow no longer generates `:latest`, branch, or floating major/minor aliases by default. Semver tags are still mutable in a registry unless registry permissions and Git tag protection are enforced; record the immutable image digest for deployments.
 
+## Private validation and provenance decision
+
+The [Issue #47 evidence matrix](release-47-evidence.md) records what automated checks can prove before a release and what remains owner-only (Windows Docker Desktop, native arm64, licensing/IP, registry digest/attestation, and GHCR permissions). The private `Private Release Validation` workflow creates local images and a private SPDX inventory artifact but **never publishes**. It is not an authorization to run this manual release pipeline.
+
 ## Remaining separate release work
 
 - [Issue #43](https://github.com/atipparaju/nats-k8s-health-bridge/issues/43): replace `:latest` in Helm/README deployment examples and wire mounted Secrets.

@@ -7,6 +7,12 @@
 
 This is a **source and connected-repository audit**, not a penetration test, production certification, runtime assessment on every operating system, or inspection of private settings inaccessible to the connector. It uses only generic file paths and public upstream URLs: no workstation names, addresses, real tokens, cluster identities, or internal infrastructure data.
 
+## Current remediation status — 2026-11-09
+
+Repository issues #38–#46 have been implemented through owner-merged PRs; #46 was closed after the post-merge Go, Container Security and Kind checks passed. Under Issue #42, the owner verified a private GHCR package and configured strict CI rules with no administrator bypass on the independent CI gate. These are **post-audit changes**; the original November 3 findings below remain a historical snapshot.
+
+**Issue #47 remains the final publication blocker.** See the [private release test/evidence and manual owner sign-off matrix](release-47-evidence.md). Windows Docker Desktop, rights clearance, GitHub SPDX metadata, a true release digest and validated signature/attestation are not established by source CI alone. Do not change repository/package visibility or publish without a separate explicit decision.
+
 ## Evidence and boundaries
 
 - Repository metadata confirmed the repository is **private** on the audit date.
