@@ -1,0 +1,5 @@
+# Exact-fingerprint exception for a synthetic, deliberately invalid bearer
+# header in the disposable local Docker smoke test, introduced in commit
+# dc5ebb136ea4aebfab1389876bb9cb0c84a384ee. This is test data only,
+# not a credential. Do not suppress other curl-auth-header findings.
+dc5ebb136ea4aebfab1389876bb9cb0c84a384ee:test/release/docker-quickstart-linux.sh:curl-auth-header:68
