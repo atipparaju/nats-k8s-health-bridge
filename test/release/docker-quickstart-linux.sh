@@ -19,7 +19,7 @@ if ! docker buildx version >/dev/null 2>&1; then
   exit 1
 fi
 
-id="${GITHUB_RUN_ID:-$}"
+id="${GITHUB_RUN_ID:-$$}"
 network="nkhb-47-${id}"
 nats_container="nkhb-47-nats-${id}"
 bridge_container="nkhb-47-bridge-${id}"
