@@ -7,7 +7,19 @@ for cmd in docker go curl openssl python3; do
   command -v "$cmd" >/dev/null || { echo "Missing prerequisite: $cmd" >&2; exit 1; }
 done
 
-id="${GITHUB_RUN_ID:-$$}"
+# The multi-platform Dockerfile uses BuildKit automatic platform arguments.
+# Without Buildx, Docker may fall back to the legacy builder and fail with
+# 'failed to parse platform : ""' after NATS and the seed have already started.
+if ! docker buildx version >/dev/null 2>&1; then
+  echo "Missing Docker Buildx: the bridge Dockerfile requires BuildKit/Buildx." >&2
+  echo "Check: docker buildx version" >&2
+  echo "On Ubuntu (Ubuntu archive): sudo apt install docker-buildx" >&2
+  echo "On Docker's official apt repository: install docker-buildx-plugin instead." >&2
+  echo "See docs/docker-quickstart.md#troubleshooting-linux-builds for alternatives." >&2
+  exit 1
+fi
+
+id="${GITHUB_RUN_ID:-$}"
 network="nkhb-47-${id}"
 nats_container="nkhb-47-nats-${id}"
 bridge_container="nkhb-47-bridge-${id}"
