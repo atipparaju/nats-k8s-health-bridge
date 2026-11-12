@@ -27,6 +27,8 @@ NATS JetStream consumers running inside Kubernetes pods have no native way to si
 
 See the [portable Docker first-run guide](docs/docker-quickstart.md) for step-by-step commands for **Windows PowerShell and Linux Bash**. It creates a disposable NATS stream and consumer, builds the bridge locally rather than pulling a potentially unavailable private GHCR package, uses a dedicated Docker network, and injects temporary diagnostic tokens safely.
 
+**Linux prerequisite:** verify `docker buildx version` before building. If Docker falls back to its legacy builder or reports an empty platform, see [Linux build troubleshooting](docs/docker-quickstart.md#troubleshooting-linux-builds).
+
 The corresponding configuration is [examples/docker/bridge-config.yaml](examples/docker/bridge-config.yaml). Do not rely on an unversioned GHCR `:latest` image or the multi-consumer generic configuration for first-run testing.
 
 ### Kubernetes sidecar injection
