@@ -97,6 +97,21 @@ jobs:
                   and item.get("RuleID") == "curl-auth-header"
                   and "invalid-token" in str(item.get("Match", ""))
               )
+              file_name = str(item.get("File", ""))
+              if file_name.endswith("test/release/docker-quickstart-linux.sh"):
+                  file_class = "linux-smoke"
+              elif file_name.endswith("test/release/docker-quickstart-windows.ps1"):
+                  file_class = "windows-smoke"
+              elif file_name.endswith("docs/docker-quickstart.md"):
+                  file_class = "quickstart-docs"
+              elif file_name.endswith(".github/workflows/release-validation.yml"):
+                  file_class = "release-workflow"
+              elif file_name.startswith("docs/") or "/docs/" in file_name:
+                  file_class = "other-docs"
+              else:
+                  file_class = "other"
+              print("Candidate file category:", file_class)
+              print("Explicit invalid-token marker:", "invalid-token" in candidate)
               print("Matches synthetic invalid-header fixture:", known_test)
               if known_test:
                   print("Synthetic test fingerprint:", item.get("Fingerprint", "unavailable"))
