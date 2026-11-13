@@ -95,7 +95,7 @@ jobs:
               known_test = (
                   str(item.get("File", "")).endswith("test/release/docker-quickstart-linux.sh")
                   and item.get("RuleID") == "curl-auth-header"
-                  and "invalid-token" in str(item.get("Match", ""))
+                  and str(item.get("Line", "")).strip() == "test \"$(curl -s -o /dev/null -w '%{http_code}' -H 'Authorization: Bearer invalid-token' \"$base/$endpoint\")\" = 401"
               )
               file_name = str(item.get("File", ""))
               if file_name.endswith("test/release/docker-quickstart-linux.sh"):
