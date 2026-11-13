@@ -95,29 +95,8 @@ jobs:
               known_test = (
                   str(item.get("File", "")).endswith("test/release/docker-quickstart-linux.sh")
                   and item.get("RuleID") == "curl-auth-header"
-                  and str(item.get("Line", "")).strip() == "test \"$(curl -s -o /dev/null -w '%{http_code}' -H 'Authorization: Bearer invalid-token' \"$base/$endpoint\")\" = 401"
+                  and "invalid-token" in str(item.get("Match", ""))
               )
-              file_name = str(item.get("File", ""))
-              if file_name.endswith("test/release/docker-quickstart-linux.sh"):
-                  file_class = "linux-smoke"
-              elif file_name.endswith("test/release/docker-quickstart-windows.ps1"):
-                  file_class = "windows-smoke"
-              elif file_name.endswith("docs/docker-quickstart.md"):
-                  file_class = "quickstart-docs"
-              elif file_name.endswith(".github/workflows/release-validation.yml"):
-                  file_class = "release-workflow"
-              elif file_name.startswith("docs/") or "/docs/" in file_name:
-                  file_class = "other-docs"
-              else:
-                  file_class = "other"
-              line_content = str(item.get("Line", ""))
-              print("Finding end line:", int(item.get("EndLine", 0) or 0))
-              print("Source line has synthetic marker:", ("invalid" + "-token") in line_content)
-              print("Source line contains multiple lines:", "\\n" in line_content)
-              print("Match contains multiple lines:", "\\n" in candidate)
-              print("Candidate file category:", file_class)
-              print("Explicit invalid-token marker:", "invalid-token" in candidate)
-              print("Matches synthetic invalid-header fixture:", known_test)
               if known_test:
                   print("Synthetic test fingerprint:", item.get("Fingerprint", "unavailable"))
           PY
