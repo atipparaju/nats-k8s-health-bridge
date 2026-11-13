@@ -110,6 +110,11 @@ jobs:
                   file_class = "other-docs"
               else:
                   file_class = "other"
+              line_content = str(item.get("Line", ""))
+              print("Finding end line:", int(item.get("EndLine", 0) or 0))
+              print("Source line has synthetic marker:", ("invalid" + "-token") in line_content)
+              print("Source line contains multiple lines:", "\\n" in line_content)
+              print("Match contains multiple lines:", "\\n" in candidate)
               print("Candidate file category:", file_class)
               print("Explicit invalid-token marker:", "invalid-token" in candidate)
               print("Matches synthetic invalid-header fixture:", known_test)
