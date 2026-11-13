@@ -3,6 +3,47 @@
 **Updated:** 2026-11-09 · **Repository status:** private · **GHCR status:** owner previously confirmed Private; recheck before publication.  
 **Decision:** **NOT APPROVED TO PUBLISH.** This file is a plan and an evidence ledger, not a signed certification.
 
+## Evidence reconciliation — 2026-11-13 (Issue #64)
+
+**Current source baseline:** PR #62 merged into `main` as commit `25dfcee5396df3e52b2f647cb775a2a8833876be` on November 13, 2026. The last fully validated PR head was `c2b5135672026da571e96efea8f2d0a3eee5a817`. The manual Windows/Linux tests below were performed on earlier commit `acc39612feda9a5de04c35d2e0a30c029b9e6279`, before PR #62; the Linux Buildx preflight was also tested separately on the PR branch. Do not treat these as one identical run.
+
+### Recorded owner-operated host tests
+
+| Test | Result and scope | Environment | Evidence limitations |
+| --- | --- | --- | --- |
+| Windows Docker Desktop local smoke (2026-11-11) | **PASS**: disposable real JetStream consumer, readiness and protected diagnostics | Windows/amd64; Docker Desktop 4.99.0 (245822); Docker Engine 29.9.3; Buildx 0.38.1; PowerShell 7.6.6; Go 1.26.2 | Owner-provided terminal output and Desktop screenshot; exact Windows OS version, portable full logs and automated artifact absent |
+| Native Linux Docker smoke on OpenVillage AI (2026-11-11) | **PASS**: real JetStream consumer, readiness, protected diagnostics and reported cleanup | Ubuntu 26.04.1 LTS, linux/amd64; Docker Engine 29.1.3; Buildx 0.30.1; Go 1.26.8 | Owner-provided terminal output; no independent archived full log |
+| Linux Buildx fix PR #62 (2026-11-12) | **PASS** owner-reported positive smoke with Buildx; **PASS** simulated missing-Buildx early failure with actionable error | Native OVAI Linux | Actual Docker resource absence after simulated negative case was not separately inspected; branch-specific commit not captured in owner terminal output |
+
+[Issue #47 evidence comment](https://github.com/atipparaju/nats-k8s-health-bridge/issues/47#issuecomment-6810701894) records the first two platform tests.
+
+### Verified automated evidence on PR #62 final pre-merge head
+
+| GitHub Actions workflow | Run ID | Recorded result |
+| --- | --- | --- |
+| CI (Test & Lint, Integration Test) | [43520813166](https://github.com/atipparaju/nats-k8s-health-bridge/actions/runs/43520813166) | **SUCCESS** |
+| Container Security | [43520813129](https://github.com/atipparaju/nats-k8s-health-bridge/actions/runs/43520813129) | **SUCCESS**; not proof of absence of all vulnerabilities |
+| Kubernetes Smoke Test (Kind / Probe Smoke) | [43520813133](https://github.com/atipparaju/nats-k8s-health-bridge/actions/runs/43520813133) | **SUCCESS** |
+| Private Release Validation | [43520813262](https://github.com/atipparaju/nats-k8s-health-bridge/actions/runs/43520813262) | **SUCCESS**: Linux Docker Quickstart, Windows PowerShell syntax (not Docker Desktop runtime), Git History Secret Scan, Local Image SBOM, Linux arm64 runtime smoke under QEMU |
+
+The full-history Gitleaks scan passed with exact, reviewed synthetic-test fingerprint entries documented in Issues #61 and #63 and merged PR #62. It is **not** a guarantee that every external ref or untracked artifact was scanned. The private SPDX artifact `private-candidate-sbom.spdx.json` (artifact ID `14081449878`, run `43520813262`) existed and was not expired when queried on November 13, 2026. Artifact existence is **not** a third-party license review or approval.
+
+**Post-merge verification boundary:** merged `main` was checked for the Buildx preflight and exact historical Gitleaks entries; a separate post-merge CI success has not been independently established in this ledger.
+
+### Remaining owner decisions — do not check off automatically
+
+- [x] Owner-reported real Windows Docker Desktop and native Linux/amd64 first-run smoke results and their available environment metadata recorded
+- [x] Pre-merge PR #62 CI, Kind, Container Security, Linux/Windows syntax, Gitleaks, SBOM generation and QEMU arm64 evidence recorded with run IDs
+- [ ] Review the **contents** of the private SPDX artifact for dependency license compatibility, required NOTICE attribution and exceptions; inventory generation alone is insufficient
+- [ ] Reverify GitHub REST license/SPDX recognition; reconcile source copyright headers and actual rights-holder identity without assuming ownership transfer
+- [ ] Verify contributor/employment/other contractual rights and obtain any required written approvals for public distribution
+- [ ] Recheck GHCR package visibility and Actions access in provider settings immediately before any contemplated publication
+- [ ] Decide precise supported Go/NATS/Kubernetes and operating-system compatibility boundaries; assess whether native ARM64 validation is needed
+- [ ] Agree on registry-image digest, signed provenance and attestation strategy; no registry digest/signature exists until an explicitly approved artifact is published
+- [ ] Explicitly authorize the exact code commit, version/tag, image destination, license notices, repository/package visibility and publication timing
+
+**Decision: NO-GO for public release.** Automated CI and host smoke tests do not resolve the legal, rights, dependency-attribution, registry-provenance or owner-authorization gates. This document records evidence only and must not trigger publication.
+
 ## Evidence rules
 
 Record the exact commit SHA, CI run URL, tool and version, operating system, architecture, test conditions, outcome, and open findings. Do **not** commit tokens, vulnerability reports containing confidential context, proprietary source, developer machine paths, screenshots showing credentials, or unredacted secret-scan output. "Script exists" is not equivalent to "test passed." A GitHub Actions runner is not a Windows Docker Desktop or native ARM64 machine.
