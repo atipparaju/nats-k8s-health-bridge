@@ -97,6 +97,7 @@ jobs:
                   and item.get("RuleID") == "curl-auth-header"
                   and "invalid-token" in str(item.get("Match", ""))
               )
+              print("Matches synthetic invalid-header fixture:", known_test)
               if known_test:
                   print("Synthetic test fingerprint:", item.get("Fingerprint", "unavailable"))
           PY
