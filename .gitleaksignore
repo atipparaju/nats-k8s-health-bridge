@@ -3,3 +3,13 @@
 # dc5ebb136ea4aebfab1389876bb9cb0c84a384ee. This is test data only,
 # not a credential. Do not suppress other curl-auth-header findings.
 dc5ebb136ea4aebfab1389876bb9cb0c84a384ee:test/release/docker-quickstart-linux.sh:curl-auth-header:68
+
+# Issue #63: exact historical false positives verified in private CI triage.
+# Squash/merge commit acc39612... introduced the local smoke script; the
+# curl-auth-header detector spans lines 68-74 (ordinary probe curl calls ending
+# in a deliberately invalid bearer token). No credential is embedded.
+acc39612feda9a5de04c35d2e0a30c029b9e6279:test/release/docker-quickstart-linux.sh:curl-auth-header:68
+# A temporary CI triage commit b2204c... embedded that same synthetic test
+# assertion as a Python string for equality checking. The diagnostic was
+# subsequently removed from the workflow, but remains in reachable history.
+b2204c25116b89615c1e996cbf5750fc615135b9:.github/workflows/release-validation.yml:curl-auth-header:98

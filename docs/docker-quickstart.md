@@ -9,6 +9,8 @@ The documented manual steps below remain available. Issue #47 also provides disp
 - Linux Docker Engine with Bash and Go: `bash test/release/docker-quickstart-linux.sh`
 - Windows Docker Desktop in Linux-container mode with PowerShell 7 and Go: `pwsh -File .\\test\\release\\docker-quickstart-windows.ps1`
 
+On Linux, the build requires Docker Buildx/BuildKit. Verify `docker buildx version` before starting; the Linux harness checks for it before creating Docker resources. See [Linux build troubleshooting](#troubleshooting-linux-builds).
+
 These harnesses require free host-loopback ports `14222` and `18080`, do not create releases or touch GHCR, and deliberately leave the local `nats-k8s-health-bridge:local` image for optional inspection. See [release validation evidence](release-47-evidence.md). The Windows script requires an actual Windows Docker Desktop run; parsing it on a GitHub runner is not enough.
 
 ## Prerequisites
@@ -104,3 +106,13 @@ PowerShell: Remove-Item Env:NKHB_SERVER_STATUS_TOKEN, Env:NKHB_SERVER_METRICS_TO
 Bash: unset NKHB_SERVER_STATUS_TOKEN NKHB_SERVER_METRICS_TOKEN
 
 This is a local functional test only: it does not test Kubernetes, NATS persistence, TLS, application heartbeat, or multi-region failover. For those, see [local Kubernetes validation](local-kubernetes-validation.md). Docker image/package visibility must be reviewed separately before public release.
+
+## Troubleshooting Linux builds
+
+**Symptom:** Docker emits `DEPRECATED: The legacy builder is deprecated` and fails with `failed to parse platform : "" is an invalid OS component`. The Dockerfile uses `FROM --platform=$BUILDPLATFORM`, a BuildKit automatic platform argument; the legacy builder cannot resolve it. This is a Docker build-tooling issue, **not** a NATS/JetStream failure.
+
+1. Check `docker buildx version`. If Docker says `unknown command: docker buildx`, install the Buildx CLI plugin from your distribution's configured repositories.
+2. On Ubuntu using Ubuntu archive packages, first check `apt-cache policy docker-buildx docker-buildx-plugin`. When `docker-buildx` is available, use `sudo apt install docker-buildx`. The package named `docker-buildx-plugin` belongs to Docker's official package repositories and may be absent from Ubuntu's repositories. Use the package matching your installed Docker distribution; do not mix package sources blindly.
+3. Verify `docker buildx version` succeeds, then rerun `bash test/release/docker-quickstart-linux.sh` from the checkout. If a build still uses the legacy builder, check for `DOCKER_BUILDKIT=0`, Docker CLI plugin configuration, and the installed Docker daemon/CLI version.
+
+Do **not** remove the Dockerfile's `--platform=$BUILDPLATFORM` directive as a workaround: it is used for intentional multi-platform builds. The smoke test creates temporary containers and a dedicated network and cleans them up on exit, leaving the locally built bridge image available for inspection. A failure before the preflight completes creates no test infrastructure.
