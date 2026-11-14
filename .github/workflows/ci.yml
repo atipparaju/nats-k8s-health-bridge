@@ -45,7 +45,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.26.10'
+          go-version: '1.26.11'
           cache: true
 
       - name: Verify Go formatting
@@ -90,12 +90,12 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.26.10'
+          go-version: '1.26.11'
           cache: true
 
       - name: Start NATS with JetStream
         run: |
-          docker run -d --name nats-test -p 4222:4222 nats:2.15.1-alpine3.22 -js
+          docker run -d --name nats-test -p 4222:4222 nats:2.15.3-alpine3.22 -js
           sleep 2
           docker logs nats-test
 

@@ -7,6 +7,12 @@
 
 This is a **source and connected-repository audit**, not a penetration test, production certification, runtime assessment on every operating system, or inspection of private settings inaccessible to the connector. It uses only generic file paths and public upstream URLs: no workstation names, addresses, real tokens, cluster identities, or internal infrastructure data.
 
+## Release evidence status update — 2026-11-13
+
+Issues #61 (Linux Docker Buildx preflight) and #63 (synthetic Gitleaks history false-positive triage) were resolved by merged PR #62 on November 13. Owner-reported Windows Docker Desktop and native Ubuntu Linux smoke tests succeeded, and the final PR #62 head passed CI, Container Security, Kind / Probe Smoke and all five Private Release Validation jobs. **The detailed per-run evidence, limitations and still-open approval gates are recorded in [Issue #47 release evidence reconciliation](release-47-evidence.md#evidence-reconciliation--2026-11-13-issue-64).**
+
+The November 3 audit and November 9 status text below are retained as historical observations; unchecked items there should not be interpreted as a fresh status report. **Public release remains NO-GO** pending rights/ownership, dependency license and NOTICE review, GHCR permissions, digest/provenance policy, and separate owner approval.
+
 ## Current remediation status — 2026-11-09
 
 Repository issues #38–#46 have been implemented through owner-merged PRs; #46 was closed after the post-merge Go, Container Security and Kind checks passed. Under Issue #42, the owner verified a private GHCR package and configured strict CI rules with no administrator bypass on the independent CI gate. These are **post-audit changes**; the original November 3 findings below remain a historical snapshot.

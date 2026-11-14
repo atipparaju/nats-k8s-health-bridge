@@ -45,7 +45,7 @@ release-dry-run:
 	python3 scripts/check_release_safety.py
 
 ## run-local: run the sidecar locally against a local NATS server
-## Requires: docker run -p 4222:4222 -p 8222:8222 nats:2.15.1-alpine3.22 -js
+## Requires: docker run -p 4222:4222 -p 8222:8222 nats:2.15.3-alpine3.22 -js
 run-local:
 	NKHB_NATS_URL=nats://localhost:4222 \
 	NKHB_LOG_LEVEL=debug \
