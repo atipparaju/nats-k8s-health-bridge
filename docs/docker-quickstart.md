@@ -23,7 +23,7 @@ The following commands work in both PowerShell and Bash:
 
 ~~~sh
 docker network create nats-health-demo
-docker run -d --name nats-demo --network nats-health-demo -p 127.0.0.1:4222:4222 nats:2.15.1-alpine3.22 -js
+docker run -d --name nats-demo --network nats-health-demo -p 127.0.0.1:4222:4222 nats:2.15.3-alpine3.22 -js
 nats --server nats://127.0.0.1:4222 account info
 ~~~
 
