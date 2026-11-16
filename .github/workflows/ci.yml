@@ -95,7 +95,7 @@ jobs:
 
       - name: Start NATS with JetStream
         run: |
-          docker run -d --name nats-test -p 4222:4222 nats:2.15.3-alpine3.22 -js
+          docker run -d --name nats-test -p 4222:4222 nats:2.15.3-alpine3.22@sha256:558394a23dd3c36f2d3a64b51865fd09908010e80a542cea5e75c2af543ed62a -js
           sleep 2
           docker logs nats-test
 
