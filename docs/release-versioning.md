@@ -20,7 +20,7 @@ The repository contains Apache License 2.0 terms. Its appendix was personalized 
 
 | Target | Observed evidence | Remaining owner release gate |
 | --- | --- | --- |
-| Go | `go.mod` requires Go 1.25.0; CI uses Go 1.26.11 | Exact toolchain, dependency hashes and repeatable build |
+| Go | `go.mod` requires Go 1.26.0; CI uses Go 1.26.11 | Exact toolchain, dependency hashes and repeatable build |
 | NATS JetStream | Integration Test runs `nats:2.15.3-alpine3.22` | Supported server version range and auth/TLS tests |
 | Helm / Kubernetes | Helm 3.22.1 chart lint/template tests; Kind smoke | Record Kubernetes/Kind version and production workload compatibility |
 | Linux amd64 | Container CI and multi-platform build configuration | Runtime smoke, digest and provenance |
