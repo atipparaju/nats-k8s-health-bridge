@@ -108,10 +108,10 @@ For the complete current tree, inspect the repository. The listing below highlig
 |---|---|---|
 | `github.com/nats-io/nats.go` | v1.49.0 | NATS client + JetStream API |
 | `github.com/prometheus/client_golang` | v1.21.1 | Prometheus metrics |
-| `github.com/spf13/cobra` | v1.9.1 | CLI flags |
-| `github.com/spf13/viper` | v1.20.1 | YAML + env var config |
+| `github.com/spf13/cobra` | v1.10.1 | CLI flags |
+| `github.com/spf13/viper` | v1.21.0 | YAML + env var config |
 
-Go module minimum version: **1.24** (see `go.mod`; CI/toolchain pins may be newer).
+Go module minimum version: **1.26** (see `go.mod`; CI/toolchain pins may be newer).
 
 ---
 

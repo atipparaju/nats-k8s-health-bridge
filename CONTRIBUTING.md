@@ -6,7 +6,7 @@ Thank you for your interest in contributing! This guide will help you get starte
 
 ### Prerequisites
 
-- Go 1.24+
+- Go 1.26+
 - Docker (for running NATS locally)
 - [nats CLI](https://github.com/nats-io/natscli) (optional, for manual testing)
 
