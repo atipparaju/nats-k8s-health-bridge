@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Read-only registry index digest audit for source container images.
 
-Print candidate immutable multi-platform refs. This does not publish, login,
-modify any Docker images, or write a lockfile. Verify the CI run before pinning.
+Resolve and print multi-platform registry index digests for maintenance review.
+This does not publish, log in, modify local images, or rewrite existing pins.
+Actual pinned image builds must be checked separately by the CI smoke jobs.
 """
 import json
 import re
