@@ -48,7 +48,17 @@ The full-history Gitleaks scan passed with exact, reviewed synthetic-test finger
 
 The private `Read-only Source Image Digest Audit` job resolves **registry index digests** for the exact Go builder, NATS Server test fixture, and Distroless runtime tags through `docker buildx imagetools inspect`. It requires `linux/amd64` and `linux/arm64` in the returned manifest index and prints candidate `image:tag@sha256:...` references.
 
-**This is evidence collection, not a pin or release approval.** Candidates must be captured from a successful job run, separately reviewed and then applied to all relevant Docker/Kind/quickstart/CI references in a focused follow-up PR. A registry index digest prevents silent tag movement, but does not by itself establish signature validation, provenance, vulnerability-free content, license clearance or native ARM64 runtime correctness. The audit only reads public registry manifests and does not authenticate to, push into or change any registry. See [release publishing safeguards](release-publishing.md).
+**Verified registry index evidence — November 16, 2026:** [Private Release Validation run 43971140088](https://github.com/atipparaju/nats-k8s-health-bridge/actions/runs/43971140088), read-only image digest job succeeded for each reference and confirmed both AMD64 and ARM64:
+
+| Source image | Verified registry index digest |
+| --- | --- |
+| `golang:1.26.11-alpine3.23` | `sha256:23f198931d4bd83b4f5a613bd75656257ae8bf832dcbc2db80e1050b5219ca2a` |
+| `nats:2.15.3-alpine3.22` | `sha256:558394a23dd3c36f2d3a64b51865fd09908010e80a542cea5e75c2af543ed62a` |
+| `gcr.io/distroless/static-debian12:nonroot` | `sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab` |
+
+PR #79 adds these `tag@sha256` pins to the Dockerfile, NATS release smoke, Kind, CI and local setup documentation. **These pins require a fresh full PR-head validation before merge**; the earlier audit success is not a runtime test of the new pins.
+
+An immutable registry index reference prevents silent tag movement, but does not alone establish a validated signature, provenance, vulnerability-free content, license clearance or native ARM64 runtime correctness. The audit reads public registry manifests without login or publication. A future version/digest rotation must re-resolve multi-platform index digests and rerun the entire CI suite. See [release publishing safeguards](release-publishing.md).
 
 ## Evidence rules
 
