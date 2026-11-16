@@ -44,6 +44,12 @@ The full-history Gitleaks scan passed with exact, reviewed synthetic-test finger
 
 **Decision: NO-GO for public release.** Automated CI and host smoke tests do not resolve the legal, rights, dependency-attribution, registry-provenance or owner-authorization gates. This document records evidence only and must not trigger publication.
 
+## Image-index digest candidate collection (Issue #78)
+
+The private `Read-only Source Image Digest Audit` job resolves **registry index digests** for the exact Go builder, NATS Server test fixture, and Distroless runtime tags through `docker buildx imagetools inspect`. It requires `linux/amd64` and `linux/arm64` in the returned manifest index and prints candidate `image:tag@sha256:...` references.
+
+**This is evidence collection, not a pin or release approval.** Candidates must be captured from a successful job run, separately reviewed and then applied to all relevant Docker/Kind/quickstart/CI references in a focused follow-up PR. A registry index digest prevents silent tag movement, but does not by itself establish signature validation, provenance, vulnerability-free content, license clearance or native ARM64 runtime correctness. The audit only reads public registry manifests and does not authenticate to, push into or change any registry. See [release publishing safeguards](release-publishing.md).
+
 ## Evidence rules
 
 Record the exact commit SHA, CI run URL, tool and version, operating system, architecture, test conditions, outcome, and open findings. Do **not** commit tokens, vulnerability reports containing confidential context, proprietary source, developer machine paths, screenshots showing credentials, or unredacted secret-scan output. "Script exists" is not equivalent to "test passed." A GitHub Actions runner is not a Windows Docker Desktop or native ARM64 machine.
