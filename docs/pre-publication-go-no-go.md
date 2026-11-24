@@ -1,0 +1,62 @@
+# Pre-publication GO/NO-GO: source visibility versus artifacts
+
+**Evidence review:** 2026-11-24 · **Tracking:** [Issue #80](https://github.com/atipparaju/nats-k8s-health-bridge/issues/80) · **Repository visibility observed:** private · **Decision:** **NO-GO pending owner approvals**
+
+This is an evidence and approval matrix, not legal advice, a security certification, or permission to publish. It deliberately separates making **source code public**, publishing a **GHCR image**, and announcing a **supported release**. The first action can occur without the others, but every action still requires its own approval.
+
+## 1. Verified current-source observations
+
+| Area | Observed evidence | Limits |
+| --- | --- | --- |
+| Scope and functionality | `go.mod` depends on `nats.go`, not `jsm.go`; `internal/nats/client.go` uses `jetstream.New`, `Consumer`, and `Info`. `internal/health/checker.go` initializes `LegacyEvaluator{}` | The upstream JSM adapter is a study only; do not advertise it as integrated or imply official NATS/CNCF endorsement |
+| Tooling and provenance | Go/NATS test images and Distroless source images are pinned to registry indexes supporting amd64/arm64; verified in merged PR #79, [validation run 43971654081](https://github.com/atipparaju/nats-k8s-health-bridge/actions/runs/43971654081) | Source-image digest is not the final release image manifest, signer identity or release attestation |
+| CI and security | Last reviewed PR-head checks include Go tests/race, NATS integration, Kind, Linux Docker, Windows PowerShell syntax, Gitleaks, SPDX SBOM **creation**, QEMU arm64 and container vulnerability scan | Passing CI does not prove full attack-surface, secret-history, native ARM, or dependency-license clearance |
+| Host testing | Earlier owner-reported Windows Docker Desktop and native Ubuntu Linux amd64 smoke results are recorded in [release evidence](release-47-evidence.md) | Tests predate later merged dependency/image pins and are not proof of new Windows/native ARM runtime validation |
+| Licenses | Root `LICENSE` contains Apache-2.0 terms; source headers name a copyright holder; no separate root `NOTICE` was found | Whether notices are legally required is **undetermined**; ownership and third-party license expressions are not yet independently cleared |
+| SBOM | Private CI creates SPDX JSON and validates that it contains packages | Artifact lookup for previously identified November 16 runs returned no available artifacts on November 24; no current package-by-package review was completed |
+| Registry and governance | GHCR requires separately authorized manual publication; repository remains private | GHCR visibility, current effective rulesets, external report access and attestation support need owner verification |
+| Public metadata | `CODE_OF_CONDUCT.md` includes an external reporting email; `README.md` and `SECURITY.md` explicitly describe a private/unreleased project | The contact's permission for public exposure and public-facing descriptions must be reviewed before changing visibility |
+
+**Current open maintenance issues #67 and #72 are not inherently release blockers.** The final publication decision depends on unresolved approvals and findings below, not issue count. Issue #72 can be reconciled administratively after its merged Prometheus PR, but neither that closure nor dependency version currency establishes IP clearance.
+
+## 2. Must resolve before making the source repository PUBLIC
+
+| Gate | Evidence required for approval | State |
+| --- | --- | --- |
+| A — Rights and provenance | Confirm all contributors/rightsholders, employer and other contractual inventions/IP provisions, ownership of each committed artifact, and required written authorization or a documented determination that none is needed. Resolve differing historical attribution without inventing transfer | **UNVERIFIED — BLOCKER** |
+| B — Public-safe contents and Git history | Review the exact commit, all refs and entire history intended to be exposed (including earlier deleted content), sample configuration, Helm examples, test fixtures, workflow logs, commit metadata and documentation for credentials, personal data, confidential company/customer references and incompatible borrowed materials. Document the scope and results without putting secrets in this file | **PARTIAL — BLOCKER** |
+| C — Dependencies and redistribution | Obtain fresh accessible SPDX/SBOM including source and image dependencies. Investigate unknown/NOASSERTION licenses, copyleft/NOTICE/attribution obligations and bundled license distribution; document review and remediation. `NOTICE` absence by itself proves neither compliance nor noncompliance | **UNVERIFIED — BLOCKER** |
+| D — Correct license and author claims | Reconcile copyright ownership, source headers, root Apache-2.0 grant, GitHub license identification and independent project claims; do not misrepresent upstream monitoring algorithms or support maturity | **PARTIAL — BLOCKER** |
+| E — Public contact/security disclosure | Confirm intended public email/contact, GitHub security advisories accessibility for external reporters, disclosure instructions, support policy and exact claims about current private/unreleased state | **PARTIAL — BLOCKER** |
+| F — Publication decision | Review and explicitly approve **the exact source SHA**, Git history scope, visibility switch and timing. Separately confirm the GHCR package remains private if no image release is approved | **NOT AUTHORIZED — BLOCKER** |
+
+## 3. Before an IMAGE or SUPPORTED VERSION release (separate approvals)
+
+- [ ] Confirm GHCR package's current visibility and GitHub Actions access in package settings. Private repository visibility does not establish package visibility.
+- [ ] Determine and verify image signature, attestation and build provenance for the **actual published immutable multi-platform manifest digest**. Source-image index pins and local image IDs are insufficient.
+- [ ] Approve supported NATS/Kubernetes/Go/OS versions, severity handling, security update policy, changelog and version/tag.
+- [ ] Review unfixed HIGH/CRITICAL findings: the current Trivy job uses `ignore-unfixed: true` and blocks only fixable CRITICAL. A green gate cannot be presented as an absence of serious vulnerabilities.
+- [ ] Explicitly approve registry destination, version/tag, public/private package visibility and image publishing **separately from source visibility**.
+
+The optional `jsm.go` evaluator, migration to Go 1.27 / Helm 4, and the Docker build-push-action major upgrade are **not automatic blockers** to a clearly labeled source preview. Critical vulnerability or API compatibility issues found during release review can override that general assessment.
+
+## 4. Operational checklist (owner/compliance sign-off)
+
+- [ ] **Rights:** Record authorized decision and written approval where required. Store any contracts, legal correspondence or sensitive ownership evidence outside the Git repository.
+- [ ] **History:** Run full scanner over all intended public refs, inspect scoped exceptions, and manually review tree/history for company or person-identifying material. Document pass/fail only.
+- [ ] **Licenses:** Run new CI SBOM (private, short retention), inspect the actual JSON, third-party notices and source reuse; record unknowns and actions.
+- [ ] **Metadata:** Confirm public contact address, owner identity, copyright, contribution policy, support/security policy, and README's NATS/JSM statements.
+- [ ] **Settings:** Re-read effective GitHub rulesets, required checks, role bypass and package/Actions access rather than relying on older snapshots.
+- [ ] **Final:** Record exact authorized SHA and date of source-public decision. Never infer authorization from merged PRs or green CI.
+
+### Decision log
+
+| Field | Current decision |
+| --- | --- |
+| Source repository visibility | **NO-GO; private** |
+| GHCR image publishing | **NO-GO; separately gated** |
+| Supported first release | **NO-GO; tag/version/signature policy not approved** |
+| JSM integration required before source preview | **No**; current `LegacyEvaluator` behavior is documented, and JSM integration is a future compatibility experiment |
+| Owner/legal attestation | **Pending** |
+
+This document is safe to keep in a private PR because it contains only generic outcomes, project filenames and publicly attributable references. Do **not** commit confidential employer agreements, personal identity documents, secret scanner matches, dependency scans with sensitive infrastructure metadata, or private consultation transcripts.
