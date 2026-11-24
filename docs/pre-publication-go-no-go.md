@@ -13,11 +13,23 @@ This is an evidence and approval matrix, not legal advice, a security certificat
 | CI and security | Last reviewed PR-head checks include Go tests/race, NATS integration, Kind, Linux Docker, Windows PowerShell syntax, Gitleaks, SPDX SBOM **creation**, QEMU arm64 and container vulnerability scan | Passing CI does not prove full attack-surface, secret-history, native ARM, or dependency-license clearance |
 | Host testing | Earlier owner-reported Windows Docker Desktop and native Ubuntu Linux amd64 smoke results are recorded in [release evidence](release-47-evidence.md) | Tests predate later merged dependency/image pins and are not proof of new Windows/native ARM runtime validation |
 | Licenses | Root `LICENSE` contains Apache-2.0 terms; source headers name a copyright holder; no separate root `NOTICE` was found | Whether notices are legally required is **undetermined**; ownership and third-party license expressions are not yet independently cleared |
-| SBOM | Private CI creates SPDX JSON and validates that it contains packages | Artifact lookup for previously identified November 16 runs returned no available artifacts on November 24; no current package-by-package review was completed |
+| SBOM | The fresh private [PR #81 validation run](https://github.com/atipparaju/nats-k8s-health-bridge/actions/runs/45495524474) generated SPDX 2.3 artifact ID `14968835381`; its actual 35 package records were examined for license metadata | **29 of 35 packages** report both `licenseDeclared` and `licenseConcluded` as `NOASSERTION`, including Go dependencies and this project. This is missing classification evidence, **not proof of a license violation**. No legal/NOTICE compatibility clearance was completed |
 | Registry and governance | GHCR requires separately authorized manual publication; repository remains private | GHCR visibility, current effective rulesets, external report access and attestation support need owner verification |
 | Public metadata | `CODE_OF_CONDUCT.md` includes an external reporting email; `README.md` and `SECURITY.md` explicitly describe a private/unreleased project | The contact's permission for public exposure and public-facing descriptions must be reviewed before changing visibility |
 
 **Current open maintenance issues #67 and #72 are not inherently release blockers.** The final publication decision depends on unresolved approvals and findings below, not issue count. Issue #72 can be reconciled administratively after its merged Prometheus PR, but neither that closure nor dependency version currency establishes IP clearance.
+
+### SPDX license-field triage — 2026-11-24
+
+Downloaded and inspected `private-candidate-sbom.spdx.json` (artifact **14968835381**, CI run **45495524474**). It is an image inventory with **35 package entries** and **SPDX 2.3** metadata:
+
+- **29 packages** have `NOASSERTION` for both declared and concluded license, including the compiled Go dependency modules and the project itself. Do not interpret these fields as evidence that they are unlicensed; inspect original package license files and metadata.
+- Other package records include `BSD-3-Clause` (Go standard library), `GPL-2.0-only` (`netbase`), a composite GPL/MPL expression (`ca-certificates`), and `LicenseRef-*` values (`base-files`, `media-types`, `tzdata`). These are **scanner observations, not a conclusion** about license compatibility or distribution obligations.
+- A stand-alone root `NOTICE` file was not found. Whether a NOTICE and redistributable license texts are required for a particular distributed artifact must be resolved after examining component licensing and packaging.
+- The artifact inventory covers the **built image**, not every source, external ref, repository-history artifact, or source-dependency notice obligation. Public Git history and copyright/rights review remain distinct.
+- Keep raw SBOM and any sensitive scanner output out of the public repository unless separately reviewed for disclosure; workflow artifacts have limited retention.
+
+**Disposition: license clearance remains BLOCKED / UNVERIFIED** until each unknown record is resolved with independent upstream license evidence, attribution/notice requirements are reviewed, and the appropriate rights holder signs off.
 
 ## 2. Must resolve before making the source repository PUBLIC
 
