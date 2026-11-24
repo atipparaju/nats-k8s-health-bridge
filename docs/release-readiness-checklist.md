@@ -7,6 +7,10 @@
 
 This is a **source and connected-repository audit**, not a penetration test, production certification, runtime assessment on every operating system, or inspection of private settings inaccessible to the connector. It uses only generic file paths and public upstream URLs: no workstation names, addresses, real tokens, cluster identities, or internal infrastructure data.
 
+## Pre-publication decision update — 2026-11-24
+
+A [separate source-publication GO/NO-GO matrix](pre-publication-go-no-go.md) now distinguishes making GitHub source public from releasing a GHCR image or a supported version. The repository remains private; license/IP provenance, Git-history/public-content review, dependency NOTICE/attribution review, public metadata, and exact owner authorization are **not yet completed**. The November 3 audit and November 13 evidence updates below remain historical records, not claims of current clearance.
+
 ## Release evidence status update — 2026-11-13
 
 Issues #61 (Linux Docker Buildx preflight) and #63 (synthetic Gitleaks history false-positive triage) were resolved by merged PR #62 on November 13. Owner-reported Windows Docker Desktop and native Ubuntu Linux smoke tests succeeded, and the final PR #62 head passed CI, Container Security, Kind / Probe Smoke and all five Private Release Validation jobs. **The detailed per-run evidence, limitations and still-open approval gates are recorded in [Issue #47 release evidence reconciliation](release-47-evidence.md#evidence-reconciliation--2026-11-13-issue-64).**
