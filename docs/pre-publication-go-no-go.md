@@ -31,11 +31,28 @@ Downloaded and inspected `private-candidate-sbom.spdx.json` (artifact **14968835
 
 **Disposition: license clearance remains BLOCKED / UNVERIFIED** until each unknown record is resolved with independent upstream license evidence, attribution/notice requirements are reviewed, and the appropriate rights holder signs off.
 
+### Preliminary upstream license-source cross-check (2026-11-24)
+
+The 29 `NOASSERTION` SPDX results do **not** mean 29 packages have unlicensed code. A separate *repository-level* inspection found recognizable license texts for several corresponding upstream projects:
+
+| Upstream group / examples | Observed upstream license texts | Verification boundary |
+| --- | --- | --- |
+| NATS (`nats.go`, `nkeys`, `nuid`) and Prometheus (`client_golang`, `client_model`, `common`, `procfs`) | Apache License 2.0 | Upstream root LICENSE checked; distribution of individual releases and any notices still needs evaluation |
+| Cobra, Afero | Apache License 2.0 | Cobra/Afero use `LICENSE.txt`; no assumption that a root `LICENSE` path exists |
+| Viper, mapstructure/v2, go-toml, locafero, cast, Sourcegraph conc, gotenv, perks, xxhash | MIT-style license texts | Preserve actual upstream copyright and notice text as required by each license |
+| fsnotify, pflag, `golang.org/x/crypto`, `x/sys`, `x/text`, protobuf-go, goautoneg, klauspost/compress | BSD-style redistribution terms, with component-specific headers | Verify exact vendored package scope and applicable license text |
+| Go YAML source project | Contains both MIT and Apache license sections | File-level or dual-license implications require specific review |
+| Prometheus client_golang NOTICE | **Upstream NOTICE exists** and references additional attribution | Review applicability to the intended binary/source artifact before distribution |
+
+These are *preliminary upstream source checks*, not a comprehensive per-version bill of licenses. Dependencies and OS components in the image include scanner-reported GPL/MPL and LicenseRef values that require separate analysis if distributing an image. The project's missing root `NOTICE` should **not** be filled with invented attribution. Obtain actual required texts and permission/compatibility decisions first.
+
+**Next license clearance action:** independently confirm **the exact tagged dependency versions**, their retained LICENSE/NOTICE files and build contents; then produce a source-only versus binary/image obligation matrix. Record exceptions/uncertainties privately and do not promote the results to legal certification.
+
 ## 2. Must resolve before making the source repository PUBLIC
 
 | Gate | Evidence required for approval | State |
 | --- | --- | --- |
-| A — Rights and provenance | Confirm all contributors/rightsholders, employer and other contractual inventions/IP provisions, ownership of each committed artifact, and required written authorization or a documented determination that none is needed. Resolve differing historical attribution without inventing transfer | **UNVERIFIED — BLOCKER** |
+| A — Rights and provenance | Owner selected **B: agreements permit publication without a separate approval** (2026-11-24). This is owner-attested interpretation, **not independently reviewed legal clearance**. Confirm applicability to every committed contribution, employer/inventions provisions, rightsholder identity and historic attribution; document the rationale or obtain qualified review if uncertain | **OWNER-ATTESTED — verification pending** |
 | B — Public-safe contents and Git history | Review the exact commit, all refs and entire history intended to be exposed (including earlier deleted content), sample configuration, Helm examples, test fixtures, workflow logs, commit metadata and documentation for credentials, personal data, confidential company/customer references and incompatible borrowed materials. Document the scope and results without putting secrets in this file | **PARTIAL — BLOCKER** |
 | C — Dependencies and redistribution | Obtain fresh accessible SPDX/SBOM including source and image dependencies. Investigate unknown/NOASSERTION licenses, copyleft/NOTICE/attribution obligations and bundled license distribution; document review and remediation. `NOTICE` absence by itself proves neither compliance nor noncompliance | **UNVERIFIED — BLOCKER** |
 | D — Correct license and author claims | Reconcile copyright ownership, source headers, root Apache-2.0 grant, GitHub license identification and independent project claims; do not misrepresent upstream monitoring algorithms or support maturity | **PARTIAL — BLOCKER** |
@@ -54,7 +71,7 @@ The optional `jsm.go` evaluator, migration to Go 1.27 / Helm 4, and the Docker b
 
 ## 4. Operational checklist (owner/compliance sign-off)
 
-- [ ] **Rights:** Record authorized decision and written approval where required. Store any contracts, legal correspondence or sensitive ownership evidence outside the Git repository.
+- [ ] **Rights:** Owner selected Option B. Privately document why the relevant employment/invention terms permit this *specific* code and project, whether external contributors or reusable work product are covered, and whether any exceptions apply. No separate permission is claimed. Keep contract excerpts outside the repository.
 - [ ] **History:** Run full scanner over all intended public refs, inspect scoped exceptions, and manually review tree/history for company or person-identifying material. Document pass/fail only.
 - [ ] **Licenses:** Run new CI SBOM (private, short retention), inspect the actual JSON, third-party notices and source reuse; record unknowns and actions.
 - [ ] **Metadata:** Confirm public contact address, owner identity, copyright, contribution policy, support/security policy, and README's NATS/JSM statements.
@@ -69,6 +86,6 @@ The optional `jsm.go` evaluator, migration to Go 1.27 / Helm 4, and the Docker b
 | GHCR image publishing | **NO-GO; separately gated** |
 | Supported first release | **NO-GO; tag/version/signature policy not approved** |
 | JSM integration required before source preview | **No**; current `LegacyEvaluator` behavior is documented, and JSM integration is a future compatibility experiment |
-| Owner/legal attestation | **Pending** |
+| Owner/legal attestation | **Option B selected: agreements understood to allow publication; no separate permission obtained or independently verified** |
 
 This document is safe to keep in a private PR because it contains only generic outcomes, project filenames and publicly attributable references. Do **not** commit confidential employer agreements, personal identity documents, secret scanner matches, dependency scans with sensitive infrastructure metadata, or private consultation transcripts.
