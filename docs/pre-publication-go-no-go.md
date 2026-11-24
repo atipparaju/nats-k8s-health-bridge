@@ -50,6 +50,12 @@ These checks cover ten exact tagged dependencies, **not** the complete version-s
 
 **Next license clearance action:** independently confirm **the exact tagged dependency versions**, their retained LICENSE/NOTICE files and build contents; then produce a source-only versus binary/image obligation matrix. Record exceptions/uncertainties privately and do not promote the results to legal certification.
 
+### Detailed review artifacts (November 24)
+
+- [Exact-version Go dependency license evidence](dependency-license-review.md): verified upstream license texts for all **28 selected Go modules** (including pseudo-version source commits), identified the four selected Prometheus NOTICE files, and distinguished source-only from binary and container redistribution. This does **not** resolve the image SBOM's OS-package and file-level notice requirements.
+- [Private history and metadata review runbook](public-history-review-runbook.md): documents how to inspect fetched refs, older content and commit metadata without publishing matches. The complete owner history review is **not yet attested**.
+- Owner Option B (agreements understood to allow publication without separate approval) remains an attested interpretation, not independent legal clearance. This does not change the visibility NO-GO.
+
 ## 2. Must resolve before making the source repository PUBLIC
 
 | Gate | Evidence required for approval | State |
