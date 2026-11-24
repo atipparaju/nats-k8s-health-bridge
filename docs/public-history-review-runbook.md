@@ -14,29 +14,30 @@ This review is the remaining human security/privacy and intellectual-property ga
 
 ## Owner-run inspection on a trusted machine
 
-Run from a fresh private clone, using a scratch directory with restrictive permissions. Substitute your **own locally defined** sensitive names/domains/identifiers; do not commit that pattern file or record raw matches in GitHub.
+Run from a fresh private clone, using a scratch directory **outside the worktree** with restrictive permissions. Substitute your **own locally defined** sensitive names/domains/identifiers; do not commit that pattern file or record raw matches in GitHub.
 
 ```bash
 # Only on a trusted workstation with approved repository access.
 umask 077
-mkdir -p ./private-review
+REVIEW_DIR="$(mktemp -d "${TMPDIR:-/tmp}/nkhb-public-review.XXXXXXXX")"
+chmod 700 "$REVIEW_DIR"
 git fetch --all --tags --prune
 git fetch origin '+refs/heads/*:refs/remotes/origin/*'
 
 # Review all names of fetched refs, reachable commit metadata and historical paths.
-git for-each-ref --format='%(refname)' > ./private-review/refs.txt
+git for-each-ref --format='%(refname)' > $REVIEW_DIR/refs.txt
 git log --all --format='%H%x09%an%x09%ae%x09%cn%x09%ce%x09%s' \
-  > ./private-review/commit-metadata.txt
-git rev-list --objects --all > ./private-review/reachable-objects-and-paths.txt
+  > $REVIEW_DIR/commit-metadata.txt
+git rev-list --objects --all > $REVIEW_DIR/reachable-objects-and-paths.txt
 git log --all --name-status --format='%H' \
-  > ./private-review/historical-files.txt
+  > $REVIEW_DIR/historical-files.txt
 
 # Search **historical content**, not only the current worktree.
 # Keep the locally chosen pattern private and do not paste match lines.
 read -r -s -p 'Private review keywords (regex): ' REVIEW_TERMS; echo
 git rev-list --all | while read -r commit; do
   git grep -I -n -i -E "$REVIEW_TERMS" "$commit" -- . || true
-done > ./private-review/historical-keyword-matches.txt
+done > $REVIEW_DIR/historical-keyword-matches.txt
 unset REVIEW_TERMS
 ```
 
