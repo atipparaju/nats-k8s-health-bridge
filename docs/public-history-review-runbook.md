@@ -12,6 +12,22 @@ This review is the remaining human security/privacy and intellectual-property ga
 - The root license and configuration snippets are present, but source provenance is not attested by an automated scan.
 - Do not post a personal email address, personal commit metadata, organization-specific internal identifiers, credentials or scanner matches in an issue, PR comment or public file to demonstrate review.
 
+## GitHub branch preflight — November 24, 2026
+
+The connected repository currently exposes **five** branch refs. A comparison against `main` found:
+
+| Branch | Ahead of main | Behind main | Review significance |
+| --- | ---: | ---: | --- |
+| `main` | — | — | Current release candidate |
+| `copilot/nats-k8s-health-bridge` | 0 | 44 | No unique commits relative to `main`; historical metadata still visible |
+| `feature/oss-hygiene` | 4 | 45 | Unique contributor/governance docs and README history |
+| `fix/24-retry-permanent-errors` | 6 | 28 | Unique NATS client and integration-test history |
+| `fix/45-guard-release-publication` | 10 | 16 | Unique historical CI, scripts, Makefile and publication-safety documentation |
+
+These ahead/behind values are **snapshots**, not an exhaustive content or credentials audit. The `fix/45-guard-release-publication` branch's current CI file was checked for the image-publication guard; its visible publish job still requires manual dispatch, `publish_image=true`, and a `v*` tag. That **does not** validate all earlier workflow versions or exclude other publication mechanisms.
+
+**Do not remove old branches solely to obtain a green status.** First check whether they hold unique information that must be preserved elsewhere, inspect their full histories and PR attachments for sensitivity, and document owner-approved retention or deletion. Deleting a branch does not necessarily remove GitHub's retained historical objects or old PR-linked commits. The complete review of these branches and GitHub-side metadata has not been attested.
+
 ## Owner-run inspection on a trusted machine
 
 Run from a fresh private clone, using a scratch directory **outside the worktree** with restrictive permissions. Substitute your **own locally defined** sensitive names/domains/identifiers; do not commit that pattern file or record raw matches in GitHub.
