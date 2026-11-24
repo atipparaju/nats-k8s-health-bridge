@@ -25,23 +25,23 @@ git fetch --all --tags --prune
 git fetch origin '+refs/heads/*:refs/remotes/origin/*'
 
 # Review all names of fetched refs, reachable commit metadata and historical paths.
-git for-each-ref --format='%(refname)' > $REVIEW_DIR/refs.txt
+git for-each-ref --format='%(refname)' > "$REVIEW_DIR/refs.txt"
 git log --all --format='%H%x09%an%x09%ae%x09%cn%x09%ce%x09%s' \
-  > $REVIEW_DIR/commit-metadata.txt
-git rev-list --objects --all > $REVIEW_DIR/reachable-objects-and-paths.txt
+  > "$REVIEW_DIR/commit-metadata.txt"
+git rev-list --objects --all > "$REVIEW_DIR/reachable-objects-and-paths.txt"
 git log --all --name-status --format='%H' \
-  > $REVIEW_DIR/historical-files.txt
+  > "$REVIEW_DIR/historical-files.txt"
 
 # Search **historical content**, not only the current worktree.
 # Keep the locally chosen pattern private and do not paste match lines.
 read -r -s -p 'Private review keywords (regex): ' REVIEW_TERMS; echo
 git rev-list --all | while read -r commit; do
   git grep -I -n -i -E "$REVIEW_TERMS" "$commit" -- . || true
-done > $REVIEW_DIR/historical-keyword-matches.txt
+done > "$REVIEW_DIR/historical-keyword-matches.txt"
 unset REVIEW_TERMS
 ```
 
-Review **every finding**, especially historic configuration, sample credentials, URLs, internal organization references, copied code, binary/large assets, git submodules, CI-generated files, and commit author addresses. The output of `historical-keyword-matches.txt` may contain sensitive content; do not upload it or commit `private-review/`. When finished, securely dispose of the working copies using your organization's applicable data-retention process.
+Review **every finding**, especially historic configuration, sample credentials, URLs, internal organization references, copied code, binary/large assets, git submodules, CI-generated files, and commit author addresses. The output of `historical-keyword-matches.txt` may contain sensitive content; do not upload it or copy your private scratch directory into the repository. When finished, securely dispose of the working copies using your organization's applicable data-retention process.
 
 ### Separate from these local commands
 
