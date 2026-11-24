@@ -12,6 +12,16 @@ permissions:
   contents: read
 
 jobs:
+  source-image-digests:
+    name: Read-only Source Image Digest Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - name: Resolve source image index digests and architectures
+        run: python3 scripts/audit_image_digests.py
+
   linux-docker-smoke:
     name: Linux Docker Quickstart
     runs-on: ubuntu-latest

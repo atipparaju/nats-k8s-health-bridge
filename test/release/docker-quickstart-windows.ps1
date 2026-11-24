@@ -44,7 +44,7 @@ function Assert-Unauthorized([string]$url) {
 try {
     docker network create $network | Out-Null
     Assert-Exit "Create Docker network"
-    docker run -d --name $natsContainer --network $network --network-alias nats-demo -p "127.0.0.1:14222:4222" nats:2.15.3-alpine3.22 -js | Out-Null
+    docker run -d --name $natsContainer --network $network --network-alias nats-demo -p "127.0.0.1:14222:4222" nats:2.15.3-alpine3.22@sha256:558394a23dd3c36f2d3a64b51865fd09908010e80a542cea5e75c2af543ed62a -js | Out-Null
     Assert-Exit "Start NATS container"
 
     go build -o $seedExe ./test/release/seed

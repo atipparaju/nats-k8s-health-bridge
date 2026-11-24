@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: nats
-          image: nats:2.15.3-alpine3.22
+          image: nats:2.15.3-alpine3.22@sha256:558394a23dd3c36f2d3a64b51865fd09908010e80a542cea5e75c2af543ed62a
           args: ["-js"]
           ports:
             - containerPort: 4222

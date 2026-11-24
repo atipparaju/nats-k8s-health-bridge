@@ -36,7 +36,7 @@ trap cleanup EXIT
 docker network create "$network" >/dev/null
 docker run -d --name "$nats_container" --network "$network" \
   --network-alias nats-demo -p 127.0.0.1:14222:4222 \
-  nats:2.15.3-alpine3.22 -js >/dev/null
+  nats:2.15.3-alpine3.22@sha256:558394a23dd3c36f2d3a64b51865fd09908010e80a542cea5e75c2af543ed62a -js >/dev/null
 
 go build -o "$seed_bin" ./test/release/seed
 seeded=false

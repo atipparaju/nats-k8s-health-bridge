@@ -43,7 +43,7 @@ Integration tests require a running NATS server with JetStream:
 
 ```bash
 # Start NATS
-docker run -d --name nats-test -p 4222:4222 nats:2.15.3-alpine3.22 -js
+docker run -d --name nats-test -p 4222:4222 nats:2.15.3-alpine3.22@sha256:558394a23dd3c36f2d3a64b51865fd09908010e80a542cea5e75c2af543ed62a -js
 
 # Run integration tests
 go test -race -count=1 -tags=integration ./...
@@ -56,7 +56,7 @@ docker stop nats-test && docker rm nats-test
 
 ```bash
 # Start NATS with JetStream
-docker run -d --name nats-dev -p 4222:4222 -p 8222:8222 nats:2.15.3-alpine3.22 -js
+docker run -d --name nats-dev -p 4222:4222 -p 8222:8222 nats:2.15.3-alpine3.22@sha256:558394a23dd3c36f2d3a64b51865fd09908010e80a542cea5e75c2af543ed62a -js
 
 # Create a test stream and consumer
 nats stream add ORDERS --subjects "orders.>" --storage memory --defaults
