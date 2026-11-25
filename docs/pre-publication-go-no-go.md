@@ -57,6 +57,12 @@ These checks cover ten exact tagged dependencies, **not** the complete version-s
 - [Issue #84](https://github.com/atipparaju/nats-k8s-health-bridge/issues/84): the earlier Gitleaks job did not explicitly fetch GitHub's **53 retained PR head refs**. A PR extends private scanning to those refs. Until final-head CI validates the expanded scan and owner review covers metadata and attachments, Gate B remains incomplete.
 - Owner Option B (agreements understood to allow publication without separate approval) remains an attested interpretation, not independent legal clearance. This does not change the visibility NO-GO.
 
+### Public-source strategy and metadata exposure (2026-11-25)
+
+The [public-source strategy decision](public-source-strategy.md) distinguishes **Option A: publish the existing repository with history** from **Option B: publish a curated, separately validated source snapshot** while retaining the development repository privately. Neither has been selected or authorized.
+
+GitHub's documented private-to-public visibility change exposes historical Actions logs and disables push rulesets. The owner must also decide whether historical Git author email metadata and the direct Code of Conduct contact address are acceptable disclosures. Changing the Git commit email for future commits does not remove email metadata from older commits. Do not merge publication wording or alter existing Git history ahead of that decision.
+
 ## 2. Must resolve before making the source repository PUBLIC
 
 | Gate | Evidence required for approval | State |
