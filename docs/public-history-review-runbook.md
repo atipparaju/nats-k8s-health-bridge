@@ -8,7 +8,7 @@ This review is the remaining human security/privacy and intellectual-property ga
 
 - The CI `Git History Secret Scan` uses a full fetch of branch/tag refs and the Gitleaks scanner in a no-network, read-only container; it has passed on previously validated heads. Three exact fingerprint exceptions are documented in `.gitleaksignore` for synthetic test-only bearer-header text. These should still be inspected, not globally disabled.
 - Spot searches of the current indexed repository for confidential company names were inconclusive as a **full-history** check; no current-source hit cannot prove an absence in older commits, removed files, PRs, tags or unreachable objects.
-- Current public-facing materials contain author/copyright metadata and a contact email in `CODE_OF_CONDUCT.md`. The owner must approve the disclosure of those details.
+- Current public-facing materials contain author/copyright metadata and a contact email in `CODE_OF_CONDUCT.md`. On November 25, the owner approved disclosure of their own personal commit-author email and the existing Code of Conduct contact address. This **does not** approve employer identifiers or other contributors' private details.
 - The root license and configuration snippets are present, but source provenance is not attested by an automated scan.
 - Do not post a personal email address, personal commit metadata, organization-specific internal identifiers, credentials or scanner matches in an issue, PR comment or public file to demonstrate review.
 
@@ -41,6 +41,12 @@ The November 24 remote audit enumerated **53 retained `refs/pull/*/head` referen
 - The API listed 82 GitHub issue/PR discussion records and 37 issue comments at that snapshot. Automated text-screening found no URL pattern matching uploaded GitHub attachments in those particular bodies; it is **not proof** that PR refs, GitHub assets, screenshots, unreachable objects or other provider surfaces have no sensitive attachments.
 - The root repository's license metadata still reported `NOASSERTION` despite the Apache-2.0 text in `LICENSE`; interpret this as a recognition/provenance discrepancy, not proof the project lacks a license.
 - Do not discard or rewrite branches and PR refs as a substitute for inspection. Retained review links, discussion metadata and reachable Git objects need owner approval before source visibility changes.
+
+## Route 1 historic Actions logs — private employer-identification check
+
+The owner selected Route 1 (preserve and eventually publish the **existing** repository) for preparation only. Before any public visibility change, follow [the local-only Actions-log audit procedure](actions-log-disclosure-audit.md), tracked in [Issue #87](https://github.com/atipparaju/nats-k8s-health-bridge/issues/87). This review must cover log contents, not just run titles. The owner-approved personal and maintainer contact emails are not the reason to block publication; **employer-identifying material is explicitly disallowed**.
+
+The script requests a private runtime-only search expression and prints counts/IDs, never matching values. Unavailable logs remain unresolved, not automatically cleared. Source privacy, branch and pull-request refs, comments, attachments, employer IP provenance and licensing still require independent review.
 
 ## Owner-run inspection on a trusted machine
 
