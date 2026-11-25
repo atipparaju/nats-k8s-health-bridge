@@ -54,8 +54,14 @@ These checks cover ten exact tagged dependencies, **not** the complete version-s
 
 - [Exact-version Go dependency license evidence](dependency-license-review.md): verified upstream license texts for all **28 selected Go modules** (including pseudo-version source commits), identified the four selected Prometheus NOTICE files, and distinguished source-only from binary and container redistribution. This does **not** resolve the image SBOM's OS-package and file-level notice requirements.
 - [Private history and metadata review runbook](public-history-review-runbook.md): documents how to inspect fetched refs, older content and commit metadata without publishing matches. The complete owner history review is **not yet attested**.
-- [Issue #84](https://github.com/atipparaju/nats-k8s-health-bridge/issues/84): the earlier Gitleaks job did not explicitly fetch GitHub's **53 retained PR head refs**. A PR extends private scanning to those refs. Until final-head CI validates the expanded scan and owner review covers metadata and attachments, Gate B remains incomplete.
+- [Issue #84](https://github.com/atipparaju/nats-k8s-health-bridge/issues/84) is **closed** after merged PR #85. The expanded redacted private Gitleaks scan fetched **54 retained PR-head refs** and reported zero candidates on [validated run 45548963680](https://github.com/atipparaju/nats-k8s-health-bridge/actions/runs/45548963680). **Gate B remains incomplete** until the owner reviews author/contact metadata, historic Actions logs and GitHub-side attachments and confirms public-disclosure scope.
 - Owner Option B (agreements understood to allow publication without separate approval) remains an attested interpretation, not independent legal clearance. This does not change the visibility NO-GO.
+
+### Public-source strategy and metadata exposure (2026-11-25)
+
+The [public-source strategy decision](public-source-strategy.md) distinguishes **Route 1: publish the existing repository with history** from **Route 2: publish a curated, separately validated source snapshot** while retaining the development repository privately. Neither has been selected or authorized.
+
+GitHub's documented private-to-public visibility change exposes historical Actions logs and disables push rulesets. The owner must also decide whether historical Git author email metadata and the direct Code of Conduct contact address are acceptable disclosures. Changing the Git commit email for future commits does not remove email metadata from older commits. Do not merge publication wording or alter existing Git history ahead of that decision.
 
 ## 2. Must resolve before making the source repository PUBLIC
 

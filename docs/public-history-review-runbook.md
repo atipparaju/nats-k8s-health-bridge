@@ -32,7 +32,7 @@ These ahead/behind values are **snapshots**, not an exhaustive content or creden
 
 The November 24 remote audit enumerated **53 retained `refs/pull/*/head` references**, of which **50 head SHA values were absent from the 76 commits enumerated across the five named branches**. These PR refs may contain unique commits not covered by a branch/tag-only clone. They do not by themselves prove a secret exposure.
 
-[Issue #84](https://github.com/atipparaju/nats-k8s-health-bridge/issues/84) adds an explicit private `git fetch` of those retained PR head refs to the existing Gitleaks `--all` job. A successful run establishes improved **reachable-ref secret-scanner coverage**, **not** complete IP, privacy, author-email, attachment, or source-provenance clearance. The job must fail closed if the PR refs cannot be fetched; no secret matches or raw commit metadata should be posted in CI logs or PR comments.
+[Issue #84](https://github.com/atipparaju/nats-k8s-health-bridge/issues/84) was closed after merged PR #85 added an explicit private `git fetch` of those retained PR heads to Gitleaks `--all`. The [successful scan run 45548963680](https://github.com/atipparaju/nats-k8s-health-bridge/actions/runs/45548963680) fetched **54 PR-head refs** and reported zero candidates. This establishes improved **reachable-ref secret-scanner coverage**, **not** complete IP, privacy, author-email, Actions-log, attachment, or source-provenance clearance. The job must fail closed if the PR refs cannot be fetched; no secret matches or raw commit metadata should be posted in CI logs or PR comments.
 
 ### Remote content preflight (not a complete all-object audit)
 
