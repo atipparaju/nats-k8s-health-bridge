@@ -67,6 +67,20 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --tags --force origin '+refs/heads/*:refs/remotes/origin/*'
+          # Closed/merged PR head refs can retain unique commits outside main
+          # and named branches. Never treat the branch-only history as complete.
+          # Suppress fetch output to avoid exposing ref metadata in logs.
+          if ! git fetch --quiet --force origin \
+            '+refs/pull/*/head:refs/remotes/origin/pull/*' >/dev/null 2>&1; then
+            echo "FAIL: could not fetch retained PR head refs for private history scan." >&2
+            exit 1
+          fi
+          pr_head_count="$(git for-each-ref --format='%(refname)' refs/remotes/origin/pull | wc -l | tr -d '[:space:]')"
+          if [ "$pr_head_count" -lt 1 ]; then
+            echo "FAIL: no PR head refs fetched; history coverage is incomplete." >&2
+            exit 1
+          fi
+          echo "PR head refs included in private secret scan (count only): $pr_head_count"
           # Keep scanner output strictly inside the runner. Even redacted findings
           # can contain sensitive paths and context; do not echo or upload them.
           output="$(mktemp)"

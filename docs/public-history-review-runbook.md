@@ -28,6 +28,20 @@ These ahead/behind values are **snapshots**, not an exhaustive content or creden
 
 **Do not remove old branches solely to obtain a green status.** First check whether they hold unique information that must be preserved elsewhere, inspect their full histories and PR attachments for sensitivity, and document owner-approved retention or deletion. Deleting a branch does not necessarily remove GitHub's retained historical objects or old PR-linked commits. The complete review of these branches and GitHub-side metadata has not been attested.
 
+## Retained GitHub pull-request history — coverage gap and remediation
+
+The November 24 remote audit enumerated **53 retained `refs/pull/*/head` references**, of which **50 head SHA values were absent from the 76 commits enumerated across the five named branches**. These PR refs may contain unique commits not covered by a branch/tag-only clone. They do not by themselves prove a secret exposure.
+
+[Issue #84](https://github.com/atipparaju/nats-k8s-health-bridge/issues/84) adds an explicit private `git fetch` of those retained PR head refs to the existing Gitleaks `--all` job. A successful run establishes improved **reachable-ref secret-scanner coverage**, **not** complete IP, privacy, author-email, attachment, or source-provenance clearance. The job must fail closed if the PR refs cannot be fetched; no secret matches or raw commit metadata should be posted in CI logs or PR comments.
+
+### Remote content preflight (not a complete all-object audit)
+
+- Compared 5 named branches, enumerated the 76 distinct commits reachable from their tips, and inspected the changed-file patches of those 76 commits for a limited set of high-risk strings and file types. This heuristic pass did not prove that historical commits are entirely free of secrets or proprietary content.
+- The earlier GitHub search and remote patch preflight identified ordinary public-contact fields and synthetic credential values used by security regression tests; those should be assessed for public disclosure rather than assumed safe solely from their location.
+- The API listed 82 GitHub issue/PR discussion records and 37 issue comments at that snapshot. Automated text-screening found no URL pattern matching uploaded GitHub attachments in those particular bodies; it is **not proof** that PR refs, GitHub assets, screenshots, unreachable objects or other provider surfaces have no sensitive attachments.
+- The root repository's license metadata still reported `NOASSERTION` despite the Apache-2.0 text in `LICENSE`; interpret this as a recognition/provenance discrepancy, not proof the project lacks a license.
+- Do not discard or rewrite branches and PR refs as a substitute for inspection. Retained review links, discussion metadata and reachable Git objects need owner approval before source visibility changes.
+
 ## Owner-run inspection on a trusted machine
 
 Run from a fresh private clone, using a scratch directory **outside the worktree** with restrictive permissions. Substitute your **own locally defined** sensitive names/domains/identifiers; do not commit that pattern file or record raw matches in GitHub.
