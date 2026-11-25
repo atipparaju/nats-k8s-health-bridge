@@ -59,7 +59,7 @@ These checks cover ten exact tagged dependencies, **not** the complete version-s
 
 ### Public-source strategy and metadata exposure (2026-11-25)
 
-The [public-source strategy decision](public-source-strategy.md) distinguishes **Option A: publish the existing repository with history** from **Option B: publish a curated, separately validated source snapshot** while retaining the development repository privately. Neither has been selected or authorized.
+The [public-source strategy decision](public-source-strategy.md) distinguishes **Route 1: publish the existing repository with history** from **Route 2: publish a curated, separately validated source snapshot** while retaining the development repository privately. Neither has been selected or authorized.
 
 GitHub's documented private-to-public visibility change exposes historical Actions logs and disables push rulesets. The owner must also decide whether historical Git author email metadata and the direct Code of Conduct contact address are acceptable disclosures. Changing the Git commit email for future commits does not remove email metadata from older commits. Do not merge publication wording or alter existing Git history ahead of that decision.
 
