@@ -44,6 +44,10 @@ Official GitHub references:
 - Test actual build, Go race/integration, Kind, source-only quickstart, secret history on the **new** repository, and Linux/arm64 image behavior when applicable. These are future gates, not completed evidence here.
 - Keep the original private repo for existing audit records and development; do not imply that copying its source transfers intellectual-property rights.
 
+### Current branch-protection verification (read-only, November 25)
+
+Both GitHub repository rulesets, `main` (id `14083325`) and `main_rule` (id `14978586`), are currently **active** and each specifies the four named required checks: `Test & Lint`, `Integration Test`, `Container vulnerability gate`, `Kind / Probe Smoke`. The `main` ruleset reports one bypass actor; do not interpret this as independent approval. GitHub documents that **push rulesets will be disabled** on a private-to-public change, so the owner must read back and restore appropriate effective protections during the eventual visibility transition. This snapshot does not verify every repository administrative permission or GHCR package setting.
+
 ### Route 1 engineering/security constraints
 
 - Accept or remediate author email and contact disclosure; changing Git email settings affects **future commits only**, not prior history.
