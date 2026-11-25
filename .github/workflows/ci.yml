@@ -32,6 +32,9 @@ jobs:
       - name: Validate unreleased release metadata
         run: python3 scripts/check_release_metadata.py
 
+      - name: Test private history log audit (offline, no credentials)
+        run: python3 -m unittest discover -s scripts -p 'test_audit_actions_log_disclosure.py' -v
+
       - name: Set up Helm
         uses: azure/setup-helm@v5.0.1
         with:
