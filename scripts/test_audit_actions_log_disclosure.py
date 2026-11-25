@@ -67,7 +67,7 @@ class ApiBoundaryTests(unittest.TestCase):
         mock_response = mock.MagicMock()
         mock_response.read.return_value = signed_data
         mock_response.__enter__.return_value = mock_response
-        with mock.patch.object(audit.NO_REDIRECT, "open", side_effect=http_error), \\
+        with mock.patch.object(audit.NO_REDIRECT, "open", side_effect=http_error), \
              mock.patch.object(urllib.request, "urlopen", return_value=mock_response) as request:
             result = audit.download_archive("a/b", "secret-test-token", 42, 1)
         self.assertEqual(result, signed_data)
@@ -92,8 +92,8 @@ class ApiBoundaryTests(unittest.TestCase):
         def download(repo, token, run_id, attempt):
             return docs[(run_id, attempt)]
         stdout = io.StringIO()
-        with mock.patch.object(audit, "list_runs", return_value=runs), \\
-             mock.patch.object(audit, "download_archive", side_effect=download), \\
+        with mock.patch.object(audit, "list_runs", return_value=runs), \
+             mock.patch.object(audit, "download_archive", side_effect=download), \
              mock.patch("sys.stdout", stdout):
             status = audit.inspect("a/b", "token", re.compile("ForbiddenMarkerAlpha"))
         output = stdout.getvalue()
