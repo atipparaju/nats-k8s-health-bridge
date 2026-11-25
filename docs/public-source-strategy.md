@@ -24,7 +24,7 @@ Official GitHub references:
 
 ## Publication choice (owner approval required)
 
-| | **Option A: make existing repository public** | **Option B: curated clean-history public repository** |
+| | **Route 1: make existing repository public** | **Route 2: curated clean-history public repository** |
 | --- | --- | --- |
 | Public code | Current reviewed source and all public-facing repository surfaces | Only a reviewed source snapshot in a **separate** newly created repository |
 | Development history | Original commits, branch/PR history, issues, author metadata, Actions logs become public | Private development repository and its existing Git/PR/Actions history remain private; new public repository begins a separate history |
@@ -34,9 +34,9 @@ Official GitHub references:
 | Existing repository | Becomes public only with explicit owner authorization | Stays private; **never fork or mirror it with complete history to create the snapshot** |
 | When to choose | Owner wants original public commit timeline **and accepts full historical disclosure** after clearance | Owner prioritizes publishing a working source preview **without exposing private Git/Actions history** |
 
-**Suggested default while disclosure review is unfinished:** Prefer **Option B (curated source-only repository)** if a public preview becomes the goal. It reduces exposure of unrelated historic refs and author metadata. This is **not authorization** to create it and is **not a shortcut** around ownership, third-party licenses, copied materials or secret review. Do not treat a new repo as automatically safer if unvetted files are copied.
+**Suggested default while disclosure review is unfinished:** Prefer **Route 2 (curated source-only repository)** if a public preview becomes the goal. It reduces exposure of unrelated historic refs and author metadata. This is **not authorization** to create it and is **not a shortcut** around ownership, third-party licenses, copied materials or secret review. Do not treat a new repo as automatically safer if unvetted files are copied.
 
-### Option B engineering constraints
+### Route 2 engineering constraints
 
 - Confirm intended public repository owner/name **before** changing the module path. The current `go.mod` and internal imports use the existing private repository path; using a new public name without updating these creates broken imports and unattributable external fetch behavior.
 - Prepare a verified allowlist of code, sample configuration, Helm templates, tests, CI and public-facing docs. **Do not** copy `.git`, old workflow logs/artifacts, internal release evidence or confidential review files.
@@ -44,7 +44,7 @@ Official GitHub references:
 - Test actual build, Go race/integration, Kind, source-only quickstart, secret history on the **new** repository, and Linux/arm64 image behavior when applicable. These are future gates, not completed evidence here.
 - Keep the original private repo for existing audit records and development; do not imply that copying its source transfers intellectual-property rights.
 
-### Option A engineering/security constraints
+### Route 1 engineering/security constraints
 
 - Accept or remediate author email and contact disclosure; changing Git email settings affects **future commits only**, not prior history.
 - Review all reachable branches, PR refs, issue comments, screenshots/attachments, and historical Actions logs. The expanded Gitleaks scan is not a review of those non-Git surfaces.
@@ -54,7 +54,7 @@ Official GitHub references:
 
 ## Owner decision gates (all pending)
 
-- [ ] Select Option A or B explicitly; no preference or selection is inferred from this draft.
+- [ ] Select Route 1 or Route 2 explicitly; no preference or selection is inferred from this draft.
 - [ ] Confirm acceptability of author-email and maintainer contact disclosure under the selected option.
 - [ ] Record rights review rationale for this exact code; privately verify any applicable employment/IP exceptions and third-party file provenance.
 - [ ] Finish source-dependency attribution, NOTICE and public metadata checks.
