@@ -35,6 +35,9 @@ jobs:
       - name: Test private history log audit (offline, no credentials)
         run: python3 -m unittest discover -s scripts -p 'test_audit_actions_log_disclosure.py' -v
 
+      - name: Test SPDX license triage (synthetic fixtures only)
+        run: python3 -m unittest discover -s scripts -p 'test_triage_spdx_licenses.py' -v
+
       - name: Set up Helm
         uses: azure/setup-helm@v5.0.1
         with:
