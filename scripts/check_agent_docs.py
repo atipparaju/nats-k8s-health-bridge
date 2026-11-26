@@ -54,9 +54,13 @@ def check(root: Path) -> list[str]:
             if not target or "://" in target or target.startswith(("mailto:", "#")):
                 continue
             # Only check relative repository markdown/document links.
-            if target.startswith("/") or ".." in Path(target).parts:
-                errors.append(f"{name}: invalid relative link")
-            elif not (parent / target).exists():
+            if Path(target).is_absolute():
+                errors.append(f"{name}: invalid absolute link")
+                continue
+            resolved = (parent / target).resolve()
+            if not resolved.is_relative_to(root.resolve()):
+                errors.append(f"{name}: relative link escapes repository")
+            elif not resolved.exists():
                 errors.append(f"{name}: broken relative link to {target}")
     return errors
 
