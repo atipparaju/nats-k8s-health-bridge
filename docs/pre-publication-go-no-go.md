@@ -59,9 +59,9 @@ These checks cover ten exact tagged dependencies, **not** the complete version-s
 
 ### Public-source strategy and metadata exposure (2026-11-25)
 
-The [public-source strategy decision](public-source-strategy.md) distinguishes **Route 1: publish the existing repository with history** from **Route 2: publish a curated, separately validated source snapshot** while retaining the development repository privately. Neither has been selected or authorized.
+The owner selected **Route 1 for preparation only** on November 25: retain the existing repository and all intended history. [Public-source strategy](public-source-strategy.md) still records Route 2 as an alternative, but no visibility change is authorized. The owner accepts their own commit-author email and the existing Code of Conduct contact email; **employer-identifying content must remain undisclosed**.
 
-GitHub's documented private-to-public visibility change exposes historical Actions logs and disables push rulesets. The owner must also decide whether historical Git author email metadata and the direct Code of Conduct contact address are acceptable disclosures. Changing the Git commit email for future commits does not remove email metadata from older commits. Do not merge publication wording or alter existing Git history ahead of that decision.
+GitHub's documented private-to-public visibility change exposes historical Actions logs and disables push rulesets. These logs have **not** been comprehensively screened for employer-identifying content; [Issue #87](https://github.com/atipparaju/nats-k8s-health-bridge/issues/87) and the [private log-audit procedure](actions-log-disclosure-audit.md) address the gap. Email disclosure is owner-approved, but historical logs, attachments, third-party licensing and IP remain independent blockers.
 
 ## 2. Must resolve before making the source repository PUBLIC
 
@@ -71,7 +71,7 @@ GitHub's documented private-to-public visibility change exposes historical Actio
 | B — Public-safe contents and Git history | Review the exact commit, all refs and entire history intended to be exposed (including earlier deleted content), sample configuration, Helm examples, test fixtures, workflow logs, commit metadata and documentation for credentials, personal data, confidential company/customer references and incompatible borrowed materials. Document the scope and results without putting secrets in this file | **PARTIAL — BLOCKER** |
 | C — Dependencies and redistribution | Obtain fresh accessible SPDX/SBOM including source and image dependencies. Investigate unknown/NOASSERTION licenses, copyleft/NOTICE/attribution obligations and bundled license distribution; document review and remediation. `NOTICE` absence by itself proves neither compliance nor noncompliance | **UNVERIFIED — BLOCKER** |
 | D — Correct license and author claims | Reconcile copyright ownership, source headers, root Apache-2.0 grant, GitHub license identification and independent project claims; do not misrepresent upstream monitoring algorithms or support maturity | **PARTIAL — BLOCKER** |
-| E — Public contact/security disclosure | Confirm intended public email/contact, GitHub security advisories accessibility for external reporters, disclosure instructions, support policy and exact claims about current private/unreleased state | **PARTIAL — BLOCKER** |
+| E — Public contact/security disclosure | Owner approved disclosure of their personal commit email and existing Code of Conduct contact address. Still verify external security reporting access, correct public-facing support policy and claims about private/unreleased state | **CONTACT APPROVED; OTHER METADATA PENDING** |
 | F — Publication decision | Review and explicitly approve **the exact source SHA**, Git history scope, visibility switch and timing. Separately confirm the GHCR package remains private if no image release is approved | **NOT AUTHORIZED — BLOCKER** |
 
 ## 3. Before an IMAGE or SUPPORTED VERSION release (separate approvals)
@@ -89,7 +89,7 @@ The optional `jsm.go` evaluator, migration to Go 1.27 / Helm 4, and the Docker b
 - [ ] **Rights:** Owner selected Option B. Privately document why the relevant employment/invention terms permit this *specific* code and project, whether external contributors or reusable work product are covered, and whether any exceptions apply. No separate permission is claimed. Keep contract excerpts outside the repository.
 - [ ] **History:** Run full scanner over all intended public refs, inspect scoped exceptions, and manually review tree/history for company or person-identifying material. Document pass/fail only.
 - [ ] **Licenses:** Run new CI SBOM (private, short retention), inspect the actual JSON, third-party notices and source reuse; record unknowns and actions.
-- [ ] **Metadata:** Confirm public contact address, owner identity, copyright, contribution policy, support/security policy, and README's NATS/JSM statements.
+- [ ] **Metadata:** Personal commit email and existing Code of Conduct address approved by owner; confirm remaining author/copyright, contribution, public security disclosure, support policy, README and NATS/JSM claims.
 - [ ] **Settings:** Re-read effective GitHub rulesets, required checks, role bypass and package/Actions access rather than relying on older snapshots.
 - [ ] **Final:** Record exact authorized SHA and date of source-public decision. Never infer authorization from merged PRs or green CI.
 

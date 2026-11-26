@@ -9,9 +9,9 @@ This is a **private, non-authorizing decision record**. Do not use it to change 
 | Surface | Observed state | Risk/next approval |
 | --- | --- | --- |
 | Commit author metadata | Earlier audit of **76 branch-reachable distinct commits** found **75 records with non-GitHub-noreply author email fields** (two distinct addresses). Counts are a dated snapshot and do not include all PR-only Git history | Owner must decide if public disclosure is acceptable. Do not add raw emails to docs, issues, or CI logs |
-| Maintainer contact | `CODE_OF_CONDUCT.md` publishes **one direct email address** | Confirm the owner authorizes this public contact, or supply a verified private reporting channel before revising it |
+| Maintainer contact | `CODE_OF_CONDUCT.md` publishes **one direct email address** | Owner accepts that contact's disclosure; do not infer broader publication approval |
 | Historical refs | The repository has five named branches and older divergent histories. Private Gitleaks validation in [run 45548963680](https://github.com/atipparaju/nats-k8s-health-bridge/actions/runs/45548963680) fetched **54 retained PR-head refs** and reported **zero candidates** | Secret scanning is improved, but IP, author metadata, workflow logs and GitHub-side attachments remain independent disclosure checks |
-| GitHub Actions history | On November 25, GitHub REST reported **479 workflow runs** in the private repo. GitHub states that **Actions history and logs become visible to everyone** when a private repo becomes public | The 479 historical logs have **not** all been individually reviewed. Review them (and retained artifacts) before any visibility change. GitHub also warns that **push rulesets are disabled** on private-to-public conversion; re-establish suitable protection afterwards |
+| GitHub Actions history | On November 25, GitHub REST listed **499 workflow runs** in the private repo (a changing count; audit scripts must enumerate again at run time). GitHub states that **Actions history and logs become visible to everyone** when a private repo becomes public | The historic run/attempt log content has **not** all been reviewed. Review them (and retained artifacts) before any visibility change. GitHub also warns that **push rulesets are disabled** on private-to-public conversion; re-establish suitable protection afterwards |
 | Repository license detection | Root `LICENSE` includes Apache-2.0 terms, but GitHub REST previously reported `license.spdx_id: NOASSERTION` | Investigate recognition and rights; do not confuse machine detection with legal ownership |
 | Source descriptions | `README.md` and `SECURITY.md` explicitly identify a private, unreleased project | Do not silently change these until a particular source publication strategy is authorized |
 | Release packaging | Go module is `github.com/atipparaju/nats-k8s-health-bridge`; its import path is embedded throughout the source and tests | Changing repository name/owner requires module path, imports, documentation and CI verification |
@@ -34,7 +34,7 @@ Official GitHub references:
 | Existing repository | Becomes public only with explicit owner authorization | Stays private; **never fork or mirror it with complete history to create the snapshot** |
 | When to choose | Owner wants original public commit timeline **and accepts full historical disclosure** after clearance | Owner prioritizes publishing a working source preview **without exposing private Git/Actions history** |
 
-**Suggested default while disclosure review is unfinished:** Prefer **Route 2 (curated source-only repository)** if a public preview becomes the goal. It reduces exposure of unrelated historic refs and author metadata. This is **not authorization** to create it and is **not a shortcut** around ownership, third-party licenses, copied materials or secret review. Do not treat a new repo as automatically safer if unvetted files are copied.
+**Owner selection (November 25, 2026): Route 1 — prepare the existing repository for public visibility, with its Git history preserved.** Route 2 remains an unused alternative. This choice authorizes **preparation only**, not publication or a GO decision. The owner permits exposure of their personal commit-author email and the existing Code of Conduct contact email, but **does not authorize exposure of employer-identifying information**. See [private historical Actions-log audit](actions-log-disclosure-audit.md).
 
 ### Route 2 engineering constraints
 
@@ -43,6 +43,10 @@ Official GitHub references:
 - Reconcile README, SECURITY, CONTRIBUTING, Code of Conduct reporting contact, versioning, package installation instructions, NOTICE obligations, attribution and JSM/nonendorsement statements with the chosen public scope.
 - Test actual build, Go race/integration, Kind, source-only quickstart, secret history on the **new** repository, and Linux/arm64 image behavior when applicable. These are future gates, not completed evidence here.
 - Keep the original private repo for existing audit records and development; do not imply that copying its source transfers intellectual-property rights.
+
+### Current branch-protection verification (read-only, November 25)
+
+Both GitHub repository rulesets, `main` (id `14083325`) and `main_rule` (id `14978586`), are currently **active** and each specifies the four named required checks: `Test & Lint`, `Integration Test`, `Container vulnerability gate`, `Kind / Probe Smoke`. The `main` ruleset reports one bypass actor; do not interpret this as independent approval. GitHub documents that **push rulesets will be disabled** on a private-to-public change, so the owner must read back and restore appropriate effective protections during the eventual visibility transition. This snapshot does not verify every repository administrative permission or GHCR package setting.
 
 ### Route 1 engineering/security constraints
 
@@ -54,8 +58,8 @@ Official GitHub references:
 
 ## Owner decision gates (all pending)
 
-- [ ] Select Route 1 or Route 2 explicitly; no preference or selection is inferred from this draft.
-- [ ] Confirm acceptability of author-email and maintainer contact disclosure under the selected option.
+- [x] **Route 1 selected for preparation only**; existing repository and history will be retained. The public visibility decision is still separate and pending.
+- [x] Owner has accepted their own commit-author and existing Code of Conduct contact email disclosure. Other contributors' rights, if any, remain separate.
 - [ ] Record rights review rationale for this exact code; privately verify any applicable employment/IP exceptions and third-party file provenance.
 - [ ] Finish source-dependency attribution, NOTICE and public metadata checks.
 - [ ] If A: review prior GitHub Actions logs/PR attachments and approve existing repository history. If B: approve precise destination, selected file inventory and module namespace migration.
