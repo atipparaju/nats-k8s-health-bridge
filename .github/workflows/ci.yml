@@ -38,6 +38,11 @@ jobs:
       - name: Test SPDX license triage (synthetic fixtures only)
         run: python3 -m unittest discover -s scripts -p 'test_triage_spdx_licenses.py' -v
 
+      - name: Validate AI coding instructions (offline)
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_check_agent_docs.py' -v
+          python3 scripts/check_agent_docs.py
+
       - name: Set up Helm
         uses: azure/setup-helm@v5.0.1
         with:
