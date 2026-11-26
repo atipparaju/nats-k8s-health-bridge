@@ -24,11 +24,11 @@ What you expected to happen.
 
 ## Actual behavior
 
-What actually happened. Include error messages or logs if available.
+What actually happened. Include sanitized error messages or logs if available.
 
 ## Environment
 
-- **nats-k8s-health-bridge version:** (e.g. v0.1.0, or `sha-abc1234`)
+- **nats-k8s-health-bridge revision:** (Git commit SHA; no supported versioned release yet)
 - **Kubernetes version:** (`kubectl version`)
 - **NATS server version:** (`nats-server --version`)
 - **Deployment method:** (Docker / Helm / binary)
@@ -40,11 +40,11 @@ What actually happened. Include error messages or logs if available.
 <summary>Sidecar logs</summary>
 
 ```
-Paste relevant log output here
+Paste sanitized log output only. Remove credentials, hostnames, identifiers, tokens, and private endpoint details.
 ```
 
 </details>
 
 ## Additional context
 
-Any other context, screenshots, or `/status` endpoint output.
+Only public-safe context, screenshots, or sanitized `/status` output. Never post secrets, internal addresses or real authentication material.

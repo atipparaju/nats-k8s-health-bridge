@@ -12,7 +12,8 @@
 
 ## Checklist
 
-- [ ] Code follows the project's coding standards (see CLAUDE.md)
+- [ ] Code follows the project's coding standards (see AGENTS.md and CONTRIBUTING.md)
+- [ ] Public-safe diff reviewed (no secrets, private details, or sensitive logs)
 - [ ] `go vet ./...` passes
 - [ ] `go test -race ./...` passes
 - [ ] New code has appropriate test coverage
