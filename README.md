@@ -213,7 +213,7 @@ Do not select the publish option before code review, a green test matrix, a revi
 
 ### Maintainer architecture reference
 
-The [developer architecture guide](CLAUDE.md) documents current readiness, authentication, redelivery and evaluator semantics. For upstream monitoring reuse, see [jsm.go compatibility](docs/jsm-evaluator-compatibility.md).
+For AI-assisted contributions, start with [AGENTS.md](AGENTS.md) (shared coding-agent rules) or [CLAUDE.md](CLAUDE.md) (Claude entry point). The [contribution guide](CONTRIBUTING.md) covers developer setup and tests; for upstream monitoring reuse, see [jsm.go compatibility](docs/jsm-evaluator-compatibility.md).
 
 ## Building
 
