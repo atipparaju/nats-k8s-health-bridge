@@ -54,23 +54,9 @@ docker stop nats-test && docker rm nats-test
 
 ### Local End-to-End Testing
 
-```bash
-# Start NATS with JetStream
-docker run -d --name nats-dev -p 4222:4222 -p 8222:8222 nats:2.15.3-alpine3.22@sha256:558394a23dd3c36f2d3a64b51865fd09908010e80a542cea5e75c2af543ed62a -js
+Use the [Docker quickstart for Windows PowerShell and Linux Bash](docs/docker-quickstart.md) to run the bridge against disposable JetStream resources with the current authentication defaults. The guide builds the image locally and provides temporary diagnostic bearer tokens. Do not expose `/status` or `/metrics` without authentication on shared networks.
 
-# Create a test stream and consumer
-nats stream add ORDERS --subjects "orders.>" --storage memory --defaults
-nats consumer add ORDERS order-processor --pull --defaults
-
-# Run the sidecar
-make run-local
-
-# Test endpoints (in another terminal)
-curl http://localhost:8080/healthz
-curl http://localhost:8080/readyz
-curl http://localhost:8080/status | jq .
-curl http://localhost:8080/metrics
-```
+For repeatable local validation, use the platform-specific smoke-test scripts in `test/release/` as documented in the quickstart. No published GHCR image is required.
 
 ## Code Standards
 
