@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing! This guide will help you get started.
 
+Coding agents and automated contributors should follow [AGENTS.md](AGENTS.md). Claude users can start with [CLAUDE.md](CLAUDE.md), which points to the same shared rules.
+
 ## Development Setup
 
 ### Prerequisites
@@ -78,6 +80,8 @@ For repeatable local validation, use the platform-specific smoke-test scripts in
 5. Write clear commit messages explaining **why**, not just what
 
 ## Reporting Issues
+
+Only share public-safe, sanitized diagnostics. Never include credentials, tokens, real internal endpoints or unredacted configuration files.
 
 Use [GitHub Issues](https://github.com/atipparaju/nats-k8s-health-bridge/issues) to report bugs or request features. Please include:
 
