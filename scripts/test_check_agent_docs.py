@@ -45,6 +45,12 @@ class AgentDocsTests(unittest.TestCase):
         )
         self.assertTrue(any("broken relative link" in x for x in validator.check(self.root)))
 
+    def test_rejects_escape_from_repository(self):
+        (self.root / ".github/copilot-instructions.md").write_text(
+            "[AGENTS.md](../../outside.md)\n", encoding="utf-8"
+        )
+        self.assertTrue(any("escapes repository" in x for x in validator.check(self.root)))
+
     def test_stale_private_wording(self):
         (self.root / "CLAUDE.md").write_text(
             "[AGENTS.md](AGENTS.md)\nRepository (private)\n", encoding="utf-8"
