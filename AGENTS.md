@@ -6,7 +6,7 @@ Guidance for coding agents and automated contributors working in this repository
 
 - This is an independently maintained, early-stage Go sidecar that translates NATS JetStream consumer observations into Kubernetes readiness/liveness endpoints and Prometheus metrics.
 - Before changing behavior, read `README.md`, `CONTRIBUTING.md`, the relevant source and tests, and `docs/docker-quickstart.md` for end-to-end usage.
-- Treat **current source, `go.mod`, and passing tests** as authoritative when older prose (including `CLAUDE.md`) disagrees. Do not repeat historical version, release, or deployment claims without checking them.
+- Treat **current source, `go.mod`, and passing tests** as authoritative if documentation becomes stale. `CLAUDE.md` is a tool-specific entry point to these shared instructions; keep it consistent rather than duplicating changing facts. Do not repeat historical version, release, or deployment claims without checking them.
 - Keep changes focused. Explain the problem, expected behavior, compatibility impact, and validation in the pull request.
 
 ## Code map
@@ -39,13 +39,13 @@ Guidance for coding agents and automated contributors working in this repository
 
 ## Validation
 
-Run the smallest relevant tests while developing, then the applicable full checks before proposing merge:
+Run the smallest relevant tests while developing, then the applicable full checks before proposing merge (run `go mod tidy` only when dependency/module changes warrant it):
 
 ```sh
 go test ./...
 go test -race -count=1 -timeout=60s ./...
 go vet ./...
-go mod tidy
+go mod tidy  # only when updating dependency/module metadata
 git diff --exit-code -- go.mod go.sum
 ```
 
