@@ -21,6 +21,33 @@ NATS JetStream consumers running inside Kubernetes pods have no native way to si
 | `GET /status` | Debug JSON | Full state of all monitored consumers |
 | `POST /heartbeat/{consumer}` | Optional application heartbeat | `200` for configured consumer from loopback; `403` for non-loopback |
 
+## Architecture at a glance
+
+```mermaid
+flowchart LR
+    NATS[("NATS JetStream")]
+    Kubelet["Kubernetes kubelet"]
+    Prom["Prometheus scraper"]
+    Operator["Operator / developer"]
+
+    subgraph Pod["Kubernetes Pod"]
+      direction TB
+      App["JetStream consumer application"]
+      Bridge["nats-k8s-health-bridge sidecar"]
+      App -->|"Optional progress heartbeat"| Bridge
+    end
+
+    App <-->|"Consume / acknowledge messages"| NATS
+    Bridge -->|"Poll consumer information"| NATS
+    Kubelet -->|"GET /healthz and /readyz"| Bridge
+    Prom -->|"GET /metrics with token"| Bridge
+    Operator -->|"GET /status with token"| Bridge
+```
+
+The application processes messages independently; the sidecar observes its JetStream consumer and exposes Kubernetes-friendly probes. **Liveness** indicates that the bridge HTTP process is responsive, whereas **readiness** requires fresh consumer observations and, when configured, a valid application heartbeat. Lag/ack threshold degradation does not fail readiness unless strict mode is enabled. Diagnostics require authentication by default.
+
+See [architecture and readiness flow](docs/architecture.md) for the decision logic and scope of this source preview.
+
 ## Quickstart
 
 ### Run locally with Docker
